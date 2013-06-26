@@ -1,8 +1,4 @@
-(function(){
-
-	//Variables that'll be assigned either to important things or to.
-	var root = window,
-	
+(function(root){
 	//main Doppelganger constructor.
 	var Doppelganger;
 
@@ -13,6 +9,11 @@ Doppelganger = function(){
 	this.routes = {};
 	this.filters = {};
 };
+if ( typeof module === "object" && typeof module.exports === "object" ) {
+	module.exports = Doppelganger;
+} else {
+	root['Doppelganger'] = Doppelganger;
+}
 
 //Add routes and filters. 
 function addRF(name){
@@ -22,11 +23,13 @@ function addRF(name){
 		} else {
 			this[name][key] = value;
 		}
-	}
+	};
 }
 //@todo: move to filter once they are implemented
 function bindRouteEvents(events){
-    if (!events) return;
+    if (!events) {
+		return;
+	}
     var doc = $(document);
     du.each(events, function(callback, event){
         var eventName = event.substr(0, event.indexOf(' ')),
@@ -37,6 +40,9 @@ function bindRouteEvents(events){
 }
 
 Doppelganger.prototype = {
+	create: function(){
+		
+	},
 	init: function(){
 		//@todo figure out which route to init.
 		this.initRoute();
@@ -48,7 +54,7 @@ Doppelganger.prototype = {
 	},
 	addRoutes: addRF('routes'),
 	addRoute: addRF('routes'),
-	addFilter: addRF('filters'),
+	addFilters: addRF('filters'),
 	addFilter: addRF('filters'),
 };
 
@@ -72,4 +78,4 @@ Doppelganger.util = du = {
 };
 $ = du.$;
 
-)();
+})(this);

@@ -1,6 +1,6 @@
 'use strict';
 
-var lazify = require('../dist/doppelganger.js');
+var Doppelganger = require('../dist/doppelganger.js');
 
 exports['basic'] = {
 	setUp: function(done) {
@@ -8,8 +8,10 @@ exports['basic'] = {
 		done();
 	},
 	'Successful Test': function(test) {
+		var app = new Doppelganger();
+		app.create();
 		test.expect(1);
 		test.equal(true, true, 'Things are true');
 		test.done();
 	},
-}
+};

@@ -16,7 +16,7 @@ module.exports = function(grunt) {
 				src: 'Gruntfile.js'
 			},
 			lib: {
-				src: ['lib/**/*.js']
+				src: ['dist/doppelganger.js']
 			},
 			test: {
 				src: ['test/**/*.js']
@@ -38,7 +38,7 @@ module.exports = function(grunt) {
 			},
 			dist: {
 				src: '<%= concat.dist.dest %>',
-				dest: 'dist/<%= pkg.name %>.min.js'
+				dest: 'dist/doppelganger.min.js'
 			},
 		},
 		watch: {
@@ -65,6 +65,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	
 	// Default task.
-	grunt.registerTask('default', ['jshint', 'nodeunit', 'concat', 'uglify']);
+	grunt.registerTask('default', ['concat', 'jshint', 'nodeunit', 'uglify']);
 	
 };
