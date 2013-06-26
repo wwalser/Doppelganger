@@ -5,6 +5,11 @@
 	//convenience variables.
 	var du, $;
 
+	//useful prototypes.
+	var arrayProto = Array.prototype;
+
+	//useful functions.
+	var slice = arrayProto.slice;
 Doppelganger = function(){
 	this.routes = {};
 	this.filters = {};
@@ -16,10 +21,12 @@ if ( typeof module === "object" && typeof module.exports === "object" ) {
 }
 
 //Add routes and filters. 
-function addRF(name){
+function getSetRF(name){
 	return function(key, value){
 		if (typeof key !== "string") {
 			du.extend(this[name], key);
+		} else if (!value) {
+			return this[name][key];
 		} else {
 			this[name][key] = value;
 		}
@@ -40,8 +47,10 @@ function bindRouteEvents(events){
 }
 
 Doppelganger.prototype = {
-	create: function(){
-		
+	create: function(appObj){
+		for (var key in appObj) {
+			this['add' + du.capitolize(key)](appObj[key]);
+		}
 	},
 	init: function(){
 		//@todo figure out which route to init.
@@ -52,16 +61,31 @@ Doppelganger.prototype = {
 		bindRouteEvents(route.events);
 		//other things to do with initializing a route.
 	},
-	addRoutes: addRF('routes'),
-	addRoute: addRF('routes'),
-	addFilters: addRF('filters'),
-	addFilter: addRF('filters'),
+	addRoutes: getSetRF('routes'),
+	addRoute: getSetRF('routes'),
+	getRoute: getSetRF('routes'),
+	addFilters: getSetRF('filters'),
+	addFilter: getSetRF('filters'),
+	getFilter: getSetRF('filters')
 };
 
 
 Doppelganger.util = du = {
-	extend: function(){
-		//$.extend
+	capitolize: function(str){
+		return str.charAt(0).toUpperCase() + str.slice(1);
+	},
+	extend: function(obj){
+		var iterable = slice.call(arguments, 1),
+			source, i, prop;
+		for (i = 0; i < iterable.length; i++) {
+			source = iterable[i];
+			if (source) {
+				for (prop in source) {
+					obj[prop] = source[prop];
+				}
+			}
+		}
+		return obj;
 	},
 	each: function(){
 		//_.each
@@ -72,9 +96,6 @@ Doppelganger.util = du = {
 	$: function(){
 		//selector engine
 	},
-	partial: function(){
-		//_.partial
-	}
 };
 $ = du.$;
 
