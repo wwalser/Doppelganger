@@ -1,0 +1,37 @@
+{
+  "name": "Doppelgänger",
+  "description": "I saw this framework's doppelgänger the other day.",
+  "version": "0.2.0",
+  "homepage": "https://bitbucket.org/wwalser/doppelg-nger",
+  "author": {
+    "name": "Wesley Walser",
+    "email": "waw325@gmail.com",
+    "url": "https://github.com/wwalser"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@bitbucket.org:wwalser/doppelg-nger.git"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/wwalser/lazify/blob/master/LICENSE-MIT"
+    }
+  ],
+  "main": "lib/doppelganger.js",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "grunt nodeunit"
+  },
+  "devDependencies": {
+    "grunt-contrib-jshint": "~0.1.1",
+    "grunt-contrib-nodeunit": "~0.1.2",
+    "grunt-contrib-watch": "~0.2.0",
+    "grunt-contrib-concat": "~0.1.0",
+    "grunt-contrib-uglify": "~0.1.0",
+    "grunt": "~0.4.1"
+  },
+  "keywords": []
+}
