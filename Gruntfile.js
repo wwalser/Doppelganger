@@ -28,7 +28,15 @@ module.exports = function(grunt) {
 				stripBanners: true
 			},
 			dist: {
-				src: ['lib/intro.js', 'lib/main.js', 'lib/util.js', 'lib/outro.js'],
+				src: ['lib/intro.js', 
+					'lib/main.js', 
+					'lib/util.js',
+					'lib/Request.js',
+					'lib/filters/Filter.js',
+					'lib/filters/LocationFilter.js',
+					'lib/filters/QueryStringFilter.js',
+					'lib/filters/RouterFilter.js',
+					'lib/outro.js'],
 				dest: 'dist/doppelganger.js'
 			},
 		},

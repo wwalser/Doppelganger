@@ -1,6 +1,10 @@
 (function(root){
+	'use strict';
 	//main Doppelganger constructor.
 	var Doppelganger;
+
+	//Doppelganger objects
+	var Filter, Request;
 
 	//convenience variables.
 	var du, $;
@@ -32,19 +36,6 @@ function getSetRF(name){
 		}
 	};
 }
-//@todo: move to filter once they are implemented
-function bindRouteEvents(events){
-    if (!events) {
-		return;
-	}
-    var doc = $(document);
-    du.each(events, function(callback, event){
-        var eventName = event.substr(0, event.indexOf(' ')),
-        selector = event.substr(eventName.length+1);
-		
-        doc.on(eventName, selector, callback);
-    });
-}
 
 Doppelganger.prototype = {
 	create: function(appObj){
@@ -53,13 +44,7 @@ Doppelganger.prototype = {
 		}
 	},
 	init: function(){
-		//@todo figure out which route to init.
-		this.initRoute();
-	},
-	//This will be moved to a filter.
-	initRoute: function(route){
-		bindRouteEvents(route.events);
-		//other things to do with initializing a route.
+		//do fancy things.
 	},
 	addRoutes: getSetRF('routes'),
 	addRoute: getSetRF('routes'),
@@ -98,5 +83,103 @@ Doppelganger.util = du = {
 	},
 };
 $ = du.$;
+
+Doppelganger.Request = Request = function(app){
+	this.app = app;
+};
+Doppelganger.Request.prototype = {
+	/**
+	 * Sets a single query param key and value
+	 */
+	setQueryParam: function(key, value){
+        if (value.length === 0) {
+            delete this.query[key];
+        } else {
+            this.query[key] = value;
+        }
+    },
+	/**
+	 * Returns the query object
+	 */
+	getQuery: function(){
+        return this.query;
+    },
+	/**
+	 * Sets the query object
+	 */
+	setQuery: function(obj){
+		this.query = obj;
+	},
+	/**
+	 * Builds a query string from the query object
+	 */
+	buildQueryString: function(){
+        var queryString = "";
+        $.each(this.getQuery(), function(key, value){
+            queryString += (encodeURIComponent(key) + "=" + encodeURIComponent(value));
+			queryString += '&';
+        });
+        return queryString.length ? '?' + queryString.slice(0,-1) : queryString;
+    }
+};
+
+//Namespace for all of Doppelganger's built in Filters.
+Doppelganger.Filters = {};
+//Constructor for a filters.
+Doppelganger.Filter = Filter = function(name, filter){
+	this.name = name;
+	this.filter = filter;
+};
+
+Filter.prototype = {
+	sayName: function(){
+		return this.name;
+	},
+	apply: function(app, request){
+		this.filter.call(app, request);
+	}
+};
+Doppelganger.Filters.LocationFilter = new Filter('Location', function(request){
+	var location;
+	request.location = location = root.location;
+	//In case we're using Doppelganger in an environment without a global variable
+	if (location) {
+		request.search = root.location.search;
+		request.pathName = root.location.pathname;
+	}
+});
+
+Doppelganger.Filters.QueryStringFilter = new Filter('QueryString', function(request){
+	var search = request.search,
+		splitSearch = search.slice(1).split('&'),
+		query = {};
+	
+    if (search !== "") {
+        $.each(splitSearch, function(i, paramString){
+            var paramPair = paramString.split('=');
+            query[paramPair[0]] = paramPair[1];
+        });
+    }
+    request.setQuery(query);
+});
+
+Doppelganger.Filters.RouterFilter = new Filter('Router', function(request){
+	function bindRouteEvents(events){
+		if (!events) {
+			return;
+		}
+		var doc = $(document);
+		du.each(events, function(callback, event){
+			var eventName = event.substr(0, event.indexOf(' ')),
+			selector = event.substr(eventName.length+1);
+			
+			doc.on(eventName, selector, callback);
+		});
+	}
+	bindRouteEvents({'click a': function(){
+		//faked for grunt build.
+		console.log(request);
+	}});
+});
 
 })(this);
