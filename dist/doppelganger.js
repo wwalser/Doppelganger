@@ -6,7 +6,7 @@
 	//Doppelganger objects
 	var Filter, Request;
 
-	//convenience variables.
+	//Doppelganger utils and selector
 	var du, $;
 
 	//useful prototypes.
@@ -14,6 +14,11 @@
 
 	//useful functions.
 	var slice = arrayProto.slice;
+
+	//natives
+	var nativeIsArray = arrayProto.isArray;
+	var nativeForEach = arrayProto.forEach;
+	var document = root.document || {};
 Doppelganger = function(){
 	this.routes = {};
 	this.filters = {};
@@ -25,7 +30,7 @@ if ( typeof module === "object" && typeof module.exports === "object" ) {
 }
 
 //Add routes and filters. 
-function getSetRF(name){
+function geterSetterCreator(name){
 	return function(key, value){
 		if (typeof key !== "string") {
 			du.extend(this[name], key);
@@ -45,13 +50,52 @@ Doppelganger.prototype = {
 	},
 	init: function(){
 		//do fancy things.
+		$(root).on('statechange', function(){
+			var state = History.getState();
+			//Fire filter chain.
+			if (!state.data || !state.data.controllerStateChange) {
+				//if controllerStateChange is true a controller has triggered this state change.
+				//Otherwise use filter chain.
+				root.trigger(state.data.destination, state.data.params);
+			}
+		});
 	},
-	addRoutes: getSetRF('routes'),
-	addRoute: getSetRF('routes'),
-	getRoute: getSetRF('routes'),
-	addFilters: getSetRF('filters'),
-	addFilter: getSetRF('filters'),
-	getFilter: getSetRF('filters')
+	addRoutes: geterSetterCreator('routes'),
+	addRoute: geterSetterCreator('routes'),
+	getRoute: geterSetterCreator('routes'),
+	addFilters: geterSetterCreator('filters'),
+	addFilter: geterSetterCreator('filters'),
+	getFilter: geterSetterCreator('filters'),
+
+    navigate: function(){
+        //on initial load fire filter chain. On subsequent calls push state and the statechange handler will fire filters.
+        root.navigate = function(name, params){
+            //if pushstate, just use a full page reload.
+            if (history.pushState) {
+                History.pushState({destination: name, params: params}, document.title, root.helpers.routing.generate(name, params));
+            } else {
+                root.location = root.helpers.routing.generate(name, params);
+            }
+        };
+        root.helpers.filterManager.process();
+    },
+
+	/**
+     * Ideally this is relatively unused. The navigate method could just handle whether something is a refresh or a
+     * navigation change, but History.js doesn't fire a statechange if it's just a refresh so we need some way to 
+	 * invoke the filter manager. This can also be useful for UI state transitions which want to take advantage of
+	 * filter functionality without changing the URL.
+     * @param name
+     * @param params
+     */
+    trigger: function (name, params) {
+        root.helpers.filterManager.process({ destination: name, params: params });
+    },
+    updateContent: function (html) {
+        var $pageContent = $(this.PAGE_CONTENT_SELECTOR);
+        $pageContent.children().not('.' + root.UMFlashMessage.messageClass).remove();
+        return $pageContent.append(html);
+    }
 };
 
 
@@ -72,17 +116,52 @@ Doppelganger.util = du = {
 		}
 		return obj;
 	},
-	each: function(){
-		//_.each
+	each: function(obj, iterator, context) {
+		if (obj == null) {
+			return;
+		}
+		if (nativeForEach && obj.forEach === nativeForEach) {
+			obj.forEach(iterator, context);
+		} else if (obj.length === +obj.length) {
+			for (var i = 0, length = obj.length; i < length; i++) {
+				if (iterator.call(context, obj[i], i, obj) === false){
+					return;
+				}
+			}
+		} else {
+			for (var key in obj) {
+				if (obj.hasOwnProperty(key)) {
+					if (iterator(obj[key], key, obj) === false) {
+						break;
+					}
+				}
+			}
+		}
 	},
-	map: function(){
-		//_.map
+	isArray: nativeIsArray || function(value) {
+		return value && typeof value === 'object' && typeof value.length === 'number' &&
+			value.toString() === '[object Array]' || false;
 	},
-	$: function(){
-		//selector engine
+	map: function(collection, callback){
+		var index = -1,
+			length = collection ? collection.length : 0,
+			result = new Array(typeof length === 'number' ? length : 0);
+		
+		if (du.isArray(collection)) {
+			while (++index < length) {
+				result[index] = callback(collection[index], index, collection);
+			}
+		} else {
+			du.each(collection, function(value, key, collection) {
+				result[++index] = callback(value, key, collection);
+			});
+		}
+		return result;
 	},
+	$: document.querySelectorAll
 };
 $ = du.$;
+
 
 Doppelganger.Request = Request = function(app){
 	this.app = app;
