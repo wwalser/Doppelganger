@@ -32,6 +32,7 @@ module.exports = function(grunt) {
 					'lib/main.js', 
 					'lib/util.js',
 					'lib/Request.js',
+					'lib/FilterManager.js',
 					'lib/filters/Filter.js',
 					'lib/filters/LocationFilter.js',
 					'lib/filters/QueryStringFilter.js',

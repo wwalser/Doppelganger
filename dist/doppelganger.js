@@ -18,6 +18,7 @@
 	//natives
 	var nativeIsArray = arrayProto.isArray;
 	var nativeForEach = arrayProto.forEach;
+	var nativeIndexOf = arrayProto.indexOf;
 	var document = root.document || {};
 Doppelganger = function(){
 	this.routes = {};
@@ -142,6 +143,21 @@ Doppelganger.util = du = {
 		return value && typeof value === 'object' && typeof value.length === 'number' &&
 			value.toString() === '[object Array]' || false;
 	},
+	indexOf: function(array, item) {
+		if (array == null) {
+			return -1;
+		}
+		var i = 0, length = array.length;
+		if (nativeIndexOf && array.indexOf === nativeIndexOf) {
+			return array.indexOf(item);
+		}
+		for (; i < length; i++) {
+			if (array[i] === item) {
+				return i;
+			}
+		}
+		return -1;
+	},
 	map: function(collection, callback){
 		var index = -1,
 			length = collection ? collection.length : 0,
@@ -202,6 +218,31 @@ Doppelganger.Request.prototype = {
     }
 };
 
+//iterator is stored here in order to provide safe mutation of filters (add/remove) during process.
+var filterIterator = 0;
+Doppelganger.FilterManager = function(){
+	this.filters = [];
+};
+Doppelganger.FilterManager.prototype = {
+	add: function(filter){
+        this.filters.push(filter);
+    },
+    remove: function(filter){
+        var idx = du.indexOf(filter, this.filters);
+        if (idx !== false) {
+                //If remove is called within a filter, maintain safe iteration.
+            if (idx < filterIterator) {
+                filterIterator = filterIterator - 1;
+            }
+            this.filters.splice(idx, 1);
+        }
+    },
+    process: function(filterData){
+        for (filterIterator = 0; filterIterator < this.filters.length; filterIterator++) {
+            filterData = this.filters[filterIterator](filterData);
+        }
+    }
+};
 //Namespace for all of Doppelganger's built in Filters.
 Doppelganger.Filters = {};
 //Constructor for a filters.
