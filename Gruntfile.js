@@ -15,7 +15,7 @@ module.exports = function(grunt) {
 			gruntfile: {
 				src: 'Gruntfile.js'
 			},
-			lib: {
+			dist: {
 				src: ['dist/doppelganger.js']
 			},
 			test: {
@@ -56,8 +56,8 @@ module.exports = function(grunt) {
 				tasks: ['jshint:gruntfile']
 			},
 			lib: {
-				files: '<%= jshint.lib.src %>',
-				tasks: ['jshint:lib', 'nodeunit']
+				files: ['lib/**/*.js'],
+				tasks: ['concat', 'jshint', 'nodeunit', 'uglify']
 			},
 			test: {
 				files: '<%= jshint.test.src %>',
