@@ -72,35 +72,35 @@ Doppelganger.prototype = {
 	addFilter: getterSetterCreator('filters'),
 	getFilter: getterSetterCreator('filters'),
 
-    navigate: function(){
-        //on initial load fire filter chain. On subsequent calls push state and the statechange handler will fire filters.
-        root.navigate = function(name, params){
-            //if pushstate, just use a full page reload.
-            if (history.pushState) {
-                History.pushState({destination: name, params: params}, document.title, root.helpers.routing.generate(name, params));
-            } else {
-                root.location = root.helpers.routing.generate(name, params);
-            }
-        };
-        root.helpers.filterManager.process();
-    },
+	navigate: function(){
+		//on initial load fire filter chain. On subsequent calls push state and the statechange handler will fire filters.
+		root.navigate = function(name, params){
+			//if pushstate, just use a full page reload.
+			if (history.pushState) {
+				History.pushState({destination: name, params: params}, document.title, root.helpers.routing.generate(name, params));
+			} else {
+				root.location = root.helpers.routing.generate(name, params);
+			}
+		};
+		root.helpers.filterManager.process();
+	},
 
 	/**
-     * Ideally this is relatively unused. The navigate method could just handle whether something is a refresh or a
-     * navigation change, but History.js doesn't fire a statechange if it's just a refresh so we need some way to 
+	 * Ideally this is relatively unused. The navigate method could just handle whether something is a refresh or a
+	 * navigation change, but History.js doesn't fire a statechange if it's just a refresh so we need some way to 
 	 * invoke the filter manager. This can also be useful for UI state transitions which want to take advantage of
 	 * filter functionality without changing the URL.
-     * @param name
-     * @param params
-     */
-    trigger: function (name, params) {
-        root.helpers.filterManager.process({ destination: name, params: params });
-    },
-    updateContent: function (html) {
-        var $pageContent = $(this.PAGE_CONTENT_SELECTOR);
-        $pageContent.children().not('.' + root.UMFlashMessage.messageClass).remove();
-        return $pageContent.append(html);
-    }
+	 * @param name
+	 * @param params
+	 */
+	trigger: function (name, params) {
+		root.helpers.filterManager.process({ destination: name, params: params });
+	},
+	updateContent: function (html) {
+		var $pageContent = $(this.PAGE_CONTENT_SELECTOR);
+		$pageContent.children().not('.' + root.UMFlashMessage.messageClass).remove();
+		return $pageContent.append(html);
+	}
 };
 
 
@@ -240,18 +240,18 @@ Doppelganger.Request.prototype = {
 	 * Sets a single query param key and value
 	 */
 	setQueryParam: function(key, value){
-        if (value.length === 0) {
-            delete this.query[key];
-        } else {
-            this.query[key] = value;
-        }
-    },
+		if (value.length === 0) {
+			delete this.query[key];
+		} else {
+			this.query[key] = value;
+		}
+	},
 	/**
 	 * Returns the query object
 	 */
 	getQuery: function(){
-        return this.query;
-    },
+		return this.query;
+	},
 	/**
 	 * Sets the query object
 	 */
@@ -262,28 +262,28 @@ Doppelganger.Request.prototype = {
 	 * Builds a query string from the query object
 	 */
 	buildQueryString: function(){
-        var queryString = "";
-        $.each(this.getQuery(), function(key, value){
-            queryString += (encodeURIComponent(key) + "=" + encodeURIComponent(value));
+		var queryString = "";
+		$.each(this.getQuery(), function(key, value){
+			queryString += (encodeURIComponent(key) + "=" + encodeURIComponent(value));
 			queryString += '&';
-        });
-        return queryString.length ? '?' + queryString.slice(0,-1) : queryString;
-    }
+		});
+		return queryString.length ? '?' + queryString.slice(0,-1) : queryString;
+	}
 };
 
 Doppelganger.Router = function(rootUrl, options) {
-    this.router = new Sherpa.Router(),
+this.router = new Sherpa.Router(),
 	this.baseUrl = rootUrl;
 	this.options = du.extend({}, options);
 };
 Doppelganger.Router.prototype = {
-    recognize: function (fullUrl) {
-        return this.router.recognize(fullUrl);
-    },
-    generate: function (name, params) {
-        //because Sherpa mutates params we hand it a copy instead.
-        return this.router.generate(name, du.extend({}, params));
-    }
+	recognize: function (fullUrl) {
+		return this.router.recognize(fullUrl);
+	},
+	generate: function (name, params) {
+		//because Sherpa mutates params we hand it a copy instead.
+		return this.router.generate(name, du.extend({}, params));
+	}
 };
 //iterator is stored here in order to provide safe mutation of filters (add/remove) during process.
 var filterIterator = 0;
@@ -338,13 +338,13 @@ Doppelganger.Filters.QueryStringFilter = new Filter('QueryString', function(requ
 		splitSearch = search.slice(1).split('&'),
 		query = {};
 	
-    if (search !== "") {
-        $.each(splitSearch, function(i, paramString){
-            var paramPair = paramString.split('=');
-            query[paramPair[0]] = paramPair[1];
-        });
-    }
-    request.setQuery(query);
+	if (search !== "") {
+		$.each(splitSearch, function(i, paramString){
+			var paramPair = paramString.split('=');
+			query[paramPair[0]] = paramPair[1];
+		});
+	}
+	request.setQuery(query);
 });
 
 //@todo figure out what router to use here. Should be a singleton across the application.
@@ -352,70 +352,70 @@ var router = new Doppelganger.Router();
 
 //@todo implement routeData
 Doppelganger.Filters.RouterFilter = new Filter('Router', function(request, routeData){
-    if (!(routeData && routeData.destination && routeData.params)) {
-        // On initial load, all routerData will be empty.
-        // This is a deep extend in order to combine query and path parameters.
-        routeData = du.extend(true, routeData, this.startPage);
-    }
+	if (!(routeData && routeData.destination && routeData.params)) {
+		// On initial load, all routerData will be empty.
+		// This is a deep extend in order to combine query and path parameters.
+		routeData = du.extend(true, routeData, this.startPage);
+	}
 	
-    if (routeData.destination) {
-        routeData = du.extend(routeData, root.helpers.routing.trigger(routeData.destination, routeData.params));
-    } else {
+	if (routeData.destination) {
+		routeData = du.extend(routeData, root.helpers.routing.trigger(routeData.destination, routeData.params));
+	} else {
 		//@todo do filters execute in the context of the application?
-        this.navigate.apply(root, root.DEFAULT_ROUTE);
-    }
+		this.navigate.apply(root, root.DEFAULT_ROUTE);
+	}
 	
-    return routeData;
+	return routeData;
 });
 
 function bindEvents(events) {
-    var eventData = [];
-    if (!events) {
-        return eventData;
-    }
-    du.each(events, function (eventDescriptor, callback) {
-        var chunks = eventDescriptor.split(" "),
-        eventName = chunks[0].replace(/,/g, ' '),
-        selector = chunks.slice(1).join(" "),
-        oldCallback = callback;
+	var eventData = [];
+	if (!events) {
+		return eventData;
+	}
+	du.each(events, function (eventDescriptor, callback) {
+		var chunks = eventDescriptor.split(" "),
+		eventName = chunks[0].replace(/,/g, ' '),
+		selector = chunks.slice(1).join(" "),
+		oldCallback = callback;
 		
-        // We need to treat the callback for URL state change differently.
-        if (eventName === "statechange") {
-            callback = function() {
-                var data = History.getState().data.query;
-                oldCallback(data);
-            };
-            du.addEvent(window, eventName, callback);
-        } else {
-            du.addEvent(document, eventName, selector, callback);
-        }
+		// We need to treat the callback for URL state change differently.
+		if (eventName === "statechange") {
+			callback = function() {
+				var data = History.getState().data.query;
+				oldCallback(data);
+			};
+			du.addEvent(window, eventName, callback);
+		} else {
+			du.addEvent(document, eventName, selector, callback);
+		}
 		
-        eventData.push({name: eventName, selector: selector, callback: callback});
-    });
-    return eventData;
+		eventData.push({name: eventName, selector: selector, callback: callback});
+	});
+	return eventData;
 }
 
 function unbindEvents(events) {
-    if (events.length === 0) {
-        return;
-    }
-    du.each(events, function (i, eventData) {
-        du.removeEvent(eventData.name, eventData.selector, eventData.callback);
-    });
+	if (events.length === 0) {
+		return;
+	}
+	du.each(events, function (i, eventData) {
+		du.removeEvent(eventData.name, eventData.selector, eventData.callback);
+	});
 }
 //@todo implement a way of initlizing data within filter.
 //could continue to use closures but I'm concerned about leaking across files.
 var previousEvents = [];
 //@todo implement routeData
 Doppelganger.Filters.EventFilter = new Filter('Event', function(request, routeData){
-    if (routeData) {
-        if (!routeData.partial) {
-            //Use apply to bind to this some `app` context?
-            unbindEvents(previousEvents);
-        }
-        previousEvents = previousEvents.concat(bindEvents(routeData.events));
-    }
-    return routeData;
+	if (routeData) {
+		if (!routeData.partial) {
+			//Use apply to bind to this some `app` context?
+			unbindEvents(previousEvents);
+		}
+		previousEvents = previousEvents.concat(bindEvents(routeData.events));
+	}
+	return routeData;
 });
 
 })(this);
