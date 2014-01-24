@@ -1,6 +1,13 @@
 'use strict';
 
 module.exports = function(grunt) {
+	var defaultTasks = [
+		'concat:dist',
+		'jshint', 
+		'nodeunit', 
+		'uglify:dist', 
+		'concat:withDeps', 
+		'uglify:withDeps'];
 
 	// Project configuration.
 	grunt.initConfig({
@@ -40,6 +47,13 @@ module.exports = function(grunt) {
 					'lib/outro.js'],
 				dest: 'dist/doppelganger.js'
 			},
+			withDeps: {
+				src: ['dist/doppelganger.js',
+					'vendor/arg.js.v1.1.js',
+					'vendor/native.history.js',
+					'vendor/sherpa.js'],
+				dest: 'dist/doppelganger_with_deps.js'
+			},
 		},
 		uglify: {
 			options: {
@@ -49,6 +63,10 @@ module.exports = function(grunt) {
 				src: '<%= concat.dist.dest %>',
 				dest: 'dist/doppelganger.min.js'
 			},
+			withDeps: {
+				src: '<%= concat.withDeps.dest %>',
+				dest: 'dist/doppelganger_with_deps.min.js'
+			},
 		},
 		watch: {
 			gruntfile: {
@@ -57,7 +75,7 @@ module.exports = function(grunt) {
 			},
 			lib: {
 				files: ['lib/**/*.js'],
-				tasks: ['concat', 'jshint', 'nodeunit', 'uglify']
+				tasks: defaultTasks
 			},
 			test: {
 				files: '<%= jshint.test.src %>',
@@ -74,6 +92,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	
 	// Default task.
-	grunt.registerTask('default', ['concat', 'jshint', 'nodeunit', 'uglify']);
+	grunt.registerTask('default', defaultTasks);
 	
 };

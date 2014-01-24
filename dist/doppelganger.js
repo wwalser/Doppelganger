@@ -31,7 +31,7 @@ if ( typeof module === "object" && typeof module.exports === "object" ) {
 }
 
 //Add routes and filters. 
-function geterSetterCreator(name){
+function getterSetterCreator(name){
 	return function(key, value){
 		if (typeof key !== "string") {
 			du.extend(this[name], key);
@@ -61,12 +61,12 @@ Doppelganger.prototype = {
 			}
 		});
 	},
-	addRoutes: geterSetterCreator('routes'),
-	addRoute: geterSetterCreator('routes'),
-	getRoute: geterSetterCreator('routes'),
-	addFilters: geterSetterCreator('filters'),
-	addFilter: geterSetterCreator('filters'),
-	getFilter: geterSetterCreator('filters'),
+	addRoutes: getterSetterCreator('routes'),
+	addRoute: getterSetterCreator('routes'),
+	getRoute: getterSetterCreator('routes'),
+	addFilters: getterSetterCreator('filters'),
+	addFilter: getterSetterCreator('filters'),
+	getFilter: getterSetterCreator('filters'),
 
     navigate: function(){
         //on initial load fire filter chain. On subsequent calls push state and the statechange handler will fire filters.
@@ -252,9 +252,6 @@ Doppelganger.Filter = Filter = function(name, filter){
 };
 
 Filter.prototype = {
-	sayName: function(){
-		return this.name;
-	},
 	apply: function(app, request){
 		this.filter.call(app, request);
 	}
