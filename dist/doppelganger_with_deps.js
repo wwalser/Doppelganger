@@ -4,7 +4,7 @@
 	var Doppelganger;
 
 	//Doppelganger objects
-	var Filter, Request;
+	var Filter, Request, Router;
 
 	//Doppelganger utils and selector
 	var du, $;
@@ -37,7 +37,11 @@ if ( typeof module === "object" && typeof module.exports === "object" ) {
 function getterSetterCreator(name){
 	return function(key, value){
 		if (typeof key !== "string") {
-			du.extend(this[name], key);
+			if (du.isArray()) {
+				this[name].concat(key);
+			} else {
+				du.extend(this[name], key);
+			}
 		} else if (!value) {
 			return this[name][key];
 		} else {
@@ -46,10 +50,18 @@ function getterSetterCreator(name){
 	};
 }
 
+var autoAddFields = ['routes', 'filters'];
 Doppelganger.prototype = {
 	create: function(appObj){
-		for (var key in appObj) {
-			this['add' + du.capitolize(key)](appObj[key]);
+		var length = autoAddFields.length,
+			i = 0,
+			field;
+		for (; i < length; i++) {
+			field = autoAddFields[i];
+			if (appObj[field]) {
+				this['add' + du.capitolize(field)](appObj[field]);
+				delete appObj[field];
+			}
 		}
 	},
 	init: function(){
@@ -271,8 +283,8 @@ Doppelganger.Request.prototype = {
 	}
 };
 
-Doppelganger.Router = function(rootUrl, options) {
-this.router = new Sherpa.Router(),
+Doppelganger.Router = Router = function(rootUrl, options) {
+	this.router = new Sherpa.Router(),
 	this.baseUrl = rootUrl;
 	this.options = du.extend({}, options);
 };
