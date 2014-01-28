@@ -295,20 +295,20 @@ Doppelganger.Filter = Filter = function(name, filter){
 };
 
 Filter.prototype = {
-	apply: function(app, request){
-		this.filter.call(app, request);
+	apply: function(app, routeData){
+		this.filter.call(app, routeData);
 	}
 };
 //@todo implement routeData
-Doppelganger.Filters.RouterFilter = new Filter('Router', function(request){
-	if (!(request.destination && request.params)) {
+Doppelganger.Filters.RouterFilter = new Filter('Router', function(routeData){
+	if (!(routeData.destination && routeData.params)) {
 		// On initial load, all routerData will be empty.
 		// This is a deep extend in order to combine query and path parameters.
 		//@todo what was this for?
-		//request = du.extend(true, routeData, this.startPage);
+		//routeData = du.extend(true, routeData, this.startPage);
 	}
 	
-	if (request.destination) {
+	if (routeData.destination) {
 		//@todo trigger route
 		//router = du.extend(router, root.helpers.routing.trigger(routeData.destination, routeData.params));
 	} else {
@@ -316,7 +316,7 @@ Doppelganger.Filters.RouterFilter = new Filter('Router', function(request){
 		this.navigate.apply(root, root.DEFAULT_ROUTE);
 	}
 	
-	return request;
+	return routeData;
 });
 
 function bindEvents(events) {
@@ -358,13 +358,13 @@ function unbindEvents(events) {
 //could continue to use closures but I'm concerned about leaking across files.
 var previousEvents = [];
 //@todo implement routeData
-Doppelganger.Filters.EventFilter = new Filter('Event', function(request){
-	if (!request.partial) {
+Doppelganger.Filters.EventFilter = new Filter('Event', function(routeData){
+	if (!routeData.partial) {
 		//Use apply to bind to this some `app` context?
 		unbindEvents(previousEvents);
 	}
-	previousEvents = previousEvents.concat(bindEvents(request.events));
-	return request;
+	previousEvents = previousEvents.concat(bindEvents(routeData.events));
+	return routeData;
 });
 
 })(this);
