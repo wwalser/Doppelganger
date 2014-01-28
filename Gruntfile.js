@@ -38,7 +38,6 @@ module.exports = function(grunt) {
 				src: ['lib/intro.js', 
 					'lib/main.js', 
 					'lib/util.js',
-					'lib/Request.js',
 					'lib/Router.js',
 					'lib/FilterManager.js',
 					'lib/filters/Filter.js',

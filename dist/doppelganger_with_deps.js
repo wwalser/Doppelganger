@@ -4,7 +4,7 @@
 	var Doppelganger;
 
 	//Doppelganger objects
-	var Filter, Request, Router;
+	var Filter, Router;
 
 	//Doppelganger utils and selector
 	var du, $;
@@ -38,8 +38,12 @@ if ( typeof module === "object" && typeof module.exports === "object" ) {
 function getterSetterCreator(name){
 	return function(key, value){
 		if (typeof key !== "string") {
-			if (du.isArray(key)) {
-				this[name].concat(key);
+			if (du.isArray(this[name])) {
+				if (du.isArray(key)) {
+					this[name].concat(key);
+				} else {
+					this[name].push(key);
+				}
 			} else {
 				du.extend(this[name], key);
 			}
@@ -64,7 +68,6 @@ Doppelganger.prototype = {
 				delete appObj[field];
 			}
 		}
-		this.request = new Doppelganger.Request(this);
 		this.filterManager = new Doppelganger.FilterManager(this);
 		this.router = new Doppelganger.Router(appObj.rootUrl, appObj.routerOptions);
 	},
@@ -81,6 +84,7 @@ Doppelganger.prototype = {
 			}
 		});
 		this.startPage = this.router.recognize(window.location.pathname);
+		this.navigate();
 	},
 	addRoutes: getterSetterCreator('routes'),
 	addRoute: getterSetterCreator('routes'),
@@ -94,12 +98,12 @@ Doppelganger.prototype = {
 		this.navigate = function(name, params){
 			//if pushstate, just use a full page reload.
 			if (history.pushState) {
-				History.pushState({destination: name, params: params}, document.title, root.helpers.routing.generate(name, params));
+				History.pushState({destination: name, params: params}, document.title, this.router.generate(name, params));
 			} else {
 				root.location = root.helpers.routing.generate(name, params);
 			}
 		};
-		this.filterManager.process(this.request);
+		this.filterManager.process(this.startPage);
 	},
 
 	/**
@@ -123,6 +127,27 @@ Doppelganger.prototype = {
 
 
 Doppelganger.util = du = {
+//Add routes and filters. 
+	getterSetterCreator: function (name, context){
+		return function(key, value){
+			var object = context[name];
+			if (typeof key !== "string") {
+				if (du.isArray(object)) {
+					if (du.isArray(key)) {
+						object.concat(key);
+					} else {
+						object.push(key);
+					}
+				} else {
+					du.extend(object, key);
+				}
+			} else if (!value) {
+				return object[key];
+			} else {
+				object[key] = value;
+			}
+		};
+	},
 	capitolize: function(str){
 		return str.charAt(0).toUpperCase() + str.slice(1);
 	},
@@ -250,46 +275,6 @@ Doppelganger.util = du = {
 $ = du.$;
 
 
-Doppelganger.Request = Request = function(app){
-	this.app = app;
-	this.query = Arg.all();
-};
-Doppelganger.Request.prototype = {
-	/**
-	 * Sets a single query param key and value
-	 */
-	setQueryParam: function(key, value){
-		if (value.length === 0) {
-			delete this.query[key];
-		} else {
-			this.query[key] = value;
-		}
-	},
-	/**
-	 * Returns the query object
-	 */
-	getQuery: function(){
-		return this.query;
-	},
-	/**
-	 * Sets the query object
-	 */
-	setQuery: function(obj){
-		this.query = obj;
-	},
-	/**
-	 * Builds a query string from the query object
-	 */
-	buildQueryString: function(){
-		var queryString = "";
-		$.each(this.getQuery(), function(key, value){
-			queryString += (encodeURIComponent(key) + "=" + encodeURIComponent(value));
-			queryString += '&';
-		});
-		return queryString.length ? '?' + queryString.slice(0,-1) : queryString;
-	}
-};
-
 Doppelganger.Router = Router = function(rootUrl, options) {
 	this.router = new Sherpa.Router(),
 	this.baseUrl = rootUrl;
@@ -324,9 +309,9 @@ Doppelganger.FilterManager.prototype = {
             this.filters.splice(idx, 1);
         }
     },
-    process: function(app, request){
+    process: function(app, routeData){
         for (filterIterator = 0; filterIterator < this.filters.length; filterIterator++) {
-            request = this.filters[filterIterator].apply(this.app, request);
+            routeData = this.filters[filterIterator].apply(this.app, routeData);
         }
     }
 };

@@ -4,7 +4,7 @@
 	var Doppelganger;
 
 	//Doppelganger objects
-	var Filter, Request, Router;
+	var Filter, Router;
 
 	//Doppelganger utils and selector
 	var du, $;
@@ -34,39 +34,18 @@ if ( typeof module === "object" && typeof module.exports === "object" ) {
 	root['Doppelganger'] = Doppelganger;
 }
 
-//Add routes and filters. 
-function getterSetterCreator(name){
-	return function(key, value){
-		if (typeof key !== "string") {
-			if (du.isArray(key)) {
-				this[name].concat(key);
-			} else {
-				du.extend(this[name], key);
-			}
-		} else if (!value) {
-			return this[name][key];
-		} else {
-			this[name][key] = value;
-		}
-	};
-}
-
-var autoAddFields = ['routes', 'filters'];
+var defaultAppObjectFields = {'routes': 'router', 'filters': 'filterManager'};
 Doppelganger.prototype = {
 	create: function(appObj){
-		var length = autoAddFields.length,
-			i = 0,
-			field;
-		for (; i < length; i++) {
-			field = autoAddFields[i];
-			if (appObj[field]) {
-				this['add' + du.capitolize(field)](appObj[field]);
-				delete appObj[field];
-			}
-		}
-		this.request = new Doppelganger.Request(this);
+		var field;
 		this.filterManager = new Doppelganger.FilterManager(this);
 		this.router = new Doppelganger.Router(appObj.rootUrl, appObj.routerOptions);
+		for (var property in defaultAppObjectFields) {
+			if (defaultAppObjectFields.hasOwnProperty(property)){
+				field = defaultAppObjectFields[property];
+				this[field]['add'](appObj[property]);
+			}
+		}
 	},
 	init: function(){
 		var self = this;
@@ -81,25 +60,20 @@ Doppelganger.prototype = {
 			}
 		});
 		this.startPage = this.router.recognize(window.location.pathname);
+		this.navigate();
 	},
-	addRoutes: getterSetterCreator('routes'),
-	addRoute: getterSetterCreator('routes'),
-	getRoute: getterSetterCreator('routes'),
-	addFilters: getterSetterCreator('filters'),
-	addFilter: getterSetterCreator('filters'),
-	getFilter: getterSetterCreator('filters'),
 
 	navigate: function(){
 		//on initial load fire filter chain. On subsequent calls push state and the statechange handler will fire filters.
 		this.navigate = function(name, params){
 			//if pushstate, just use a full page reload.
 			if (history.pushState) {
-				History.pushState({destination: name, params: params}, document.title, root.helpers.routing.generate(name, params));
+				History.pushState({destination: name, params: params}, document.title, this.router.generate(name, params));
 			} else {
 				root.location = root.helpers.routing.generate(name, params);
 			}
 		};
-		this.filterManager.process(this.request);
+		this.filterManager.process(this.startPage);
 	},
 
 	/**
@@ -123,6 +97,27 @@ Doppelganger.prototype = {
 
 
 Doppelganger.util = du = {
+//Add routes and filters. 
+	getterSetterCreator: function (name){
+		return function(key, value){
+			var obj = this[name];
+			if (typeof key !== "string") {
+				if (du.isArray(obj)) {
+					if (du.isArray(key)) {
+						obj.concat(key);
+					} else {
+						obj.push(key);
+					}
+				} else {
+					du.extend(obj, key);
+				}
+			} else if (!value) {
+				return obj[key];
+			} else {
+				obj[key] = value;
+			}
+		};
+	},
 	capitolize: function(str){
 		return str.charAt(0).toUpperCase() + str.slice(1);
 	},
@@ -250,52 +245,15 @@ Doppelganger.util = du = {
 $ = du.$;
 
 
-Doppelganger.Request = Request = function(app){
-	this.app = app;
-	this.query = Arg.all();
-};
-Doppelganger.Request.prototype = {
-	/**
-	 * Sets a single query param key and value
-	 */
-	setQueryParam: function(key, value){
-		if (value.length === 0) {
-			delete this.query[key];
-		} else {
-			this.query[key] = value;
-		}
-	},
-	/**
-	 * Returns the query object
-	 */
-	getQuery: function(){
-		return this.query;
-	},
-	/**
-	 * Sets the query object
-	 */
-	setQuery: function(obj){
-		this.query = obj;
-	},
-	/**
-	 * Builds a query string from the query object
-	 */
-	buildQueryString: function(){
-		var queryString = "";
-		$.each(this.getQuery(), function(key, value){
-			queryString += (encodeURIComponent(key) + "=" + encodeURIComponent(value));
-			queryString += '&';
-		});
-		return queryString.length ? '?' + queryString.slice(0,-1) : queryString;
-	}
-};
-
 Doppelganger.Router = Router = function(rootUrl, options) {
 	this.router = new Sherpa.Router(),
 	this.baseUrl = rootUrl;
 	this.options = du.extend({}, options);
+	this.routes = {};
 };
 Doppelganger.Router.prototype = {
+	add: du.getterSetterCreator('routes'),
+	get: du.getterSetterCreator('routes'),
 	recognize: function (fullUrl) {
 		return this.router.recognize(fullUrl);
 	},
@@ -311,9 +269,7 @@ Doppelganger.FilterManager = function(app){
 	this.app = app;
 };
 Doppelganger.FilterManager.prototype = {
-	add: function(filter){
-        this.filters.push(filter);
-    },
+	add: du.getterSetterCreator('filters'),
     remove: function(filter){
         var idx = du.indexOf(filter, this.filters);
         if (idx !== false) {
@@ -324,9 +280,9 @@ Doppelganger.FilterManager.prototype = {
             this.filters.splice(idx, 1);
         }
     },
-    process: function(app, request){
+    process: function(app, routeData){
         for (filterIterator = 0; filterIterator < this.filters.length; filterIterator++) {
-            request = this.filters[filterIterator].apply(this.app, request);
+            routeData = this.filters[filterIterator].apply(this.app, routeData);
         }
     }
 };
