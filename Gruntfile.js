@@ -38,19 +38,22 @@ module.exports = function(grunt) {
 				src: ['lib/intro.js', 
 					'lib/main.js', 
 					'lib/util.js',
-					'lib/Router.js',
+					'lib/RouteManager.js',
+					'lib/Route.js',
 					'lib/FilterManager.js',
 					'lib/filters/Filter.js',
 					'lib/filters/RouterFilter.js',
 					'lib/filters/EventFilter.js',
+					'lib/filters/QueryParamFilter.js',
 					'lib/outro.js'],
 				dest: 'dist/doppelganger.js'
 			},
 			withDeps: {
-				src: ['dist/doppelganger.js',
-					'vendor/arg.js.v1.1.js',
+				src: ['vendor/arg.js.v1.1.js',
 					'vendor/native.history.js',
-					'vendor/sherpa.js'],
+					'vendor/sherpa.js',
+					'dist/doppelganger.js'
+					],
 				dest: 'dist/doppelganger_with_deps.js'
 			},
 		},

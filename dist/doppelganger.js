@@ -4,7 +4,7 @@
 	var Doppelganger;
 
 	//Doppelganger objects
-	var Filter, Router;
+	var Filter, FilterManager, Route, RouteManager;
 
 	//Doppelganger utils and selector
 	var du, $;
@@ -22,8 +22,8 @@
 	var document = root.document || {};
 
 	//Supplied by dependencies
-	var Sherpa = Sherpa || {Router: function(){}};
-	var Arg = Arg || {all: function(){}};
+	var Sherpa = root.Sherpa || {Router: function(){}};
+	var Arg = root.Arg || {all: function(){}};
 Doppelganger = function(){
 	this.routes = {};
 	this.filters = {};
@@ -34,23 +34,30 @@ if ( typeof module === "object" && typeof module.exports === "object" ) {
 	root['Doppelganger'] = Doppelganger;
 }
 
-var defaultAppObjectFields = {'routes': 'router', 'filters': 'filterManager'};
+var defaults = {
+	filters: ['EventFilter', 'RouterFilter'],
+	routes: {'index': ''}
+};
+var defaultAppObjectFields = {'routes': 'routeManager', 'filters': 'filterManager'};
 Doppelganger.prototype = {
 	create: function(appObj){
-		var field;
+		var field, propertyValue;
+		this.options = du.extend({}, defaults, appObj.options);
 		this.filterManager = new Doppelganger.FilterManager(this);
-		this.router = new Doppelganger.Router(appObj.rootUrl, appObj.routerOptions);
+		this.routeManager = new Doppelganger.RouteManager(this, appObj.rootUrl);
 		for (var property in defaultAppObjectFields) {
 			if (defaultAppObjectFields.hasOwnProperty(property)){
 				field = defaultAppObjectFields[property];
+				propertyValue = appObj[property] || this.options[property];
 				this[field]['add'](appObj[property]);
 			}
 		}
+		return this;
 	},
 	init: function(){
 		var self = this;
 		//do fancy things.
-		du.addEvent(window, 'statechange', function(){
+		History.Adapter.bind(window,'statechange', function(){
 			var state = History.getState();
 			//Fire filter chain.
 			if (!state.data || !state.data.controllerStateChange) {
@@ -59,7 +66,7 @@ Doppelganger.prototype = {
 				self.trigger(state.data.destination, state.data.params);
 			}
 		});
-		this.startPage = this.router.recognize(window.location.pathname);
+		this.startPage = this.routeManager.recognize(window.location.pathname);
 		this.navigate();
 	},
 
@@ -68,12 +75,19 @@ Doppelganger.prototype = {
 		this.navigate = function(name, params){
 			//if pushstate, just use a full page reload.
 			if (history.pushState) {
-				History.pushState({destination: name, params: params}, document.title, this.router.generate(name, params));
+				History.pushState({destination: name, params: params}, document.title, this.routeManager.generate(name, params));
 			} else {
 				root.location = root.helpers.routing.generate(name, params);
 			}
 		};
-		this.filterManager.process(this.startPage);
+		if (this.startPage) {
+			//if the page that we are on is a valid route we can show that page
+			this.filterManager.process(this.startPage);
+		} else {
+			//otherwise we've navigated somewhere that delivered the application but isn't
+			//a valid route, navigate to the defaultRoute.
+			this.navigate(this.options.defaultRoute[0], this.options.defaultRoute[1]);
+		}
 	},
 
 	/**
@@ -191,7 +205,9 @@ Doppelganger.util = du = {
 		}
 		return result;
 	},
-	$: document.querySelectorAll,
+	$: function(selector){
+		return document.querySelectorAll(selector);
+	},
 	matchesSelector: function(elem, selector) {
 		var fragment, elems;
 		//use native otherwise querySelectorAll from parent node.
@@ -245,14 +261,28 @@ Doppelganger.util = du = {
 $ = du.$;
 
 
-Doppelganger.Router = Router = function(rootUrl, options) {
+Doppelganger.RouteManager = RouteManager = function(app, rootUrl) {
+	this.app = app;
 	this.router = new Sherpa.Router(),
 	this.baseUrl = rootUrl;
-	this.options = du.extend({}, options);
 	this.routes = {};
 };
-Doppelganger.Router.prototype = {
-	add: du.getterSetterCreator('routes'),
+Doppelganger.RouteManager.prototype = {
+	add: function(routeArray){
+		var length = routeArray.length,
+			i = 0,
+			routeObject, name, url;
+		
+		for (; i < length; i++) {
+			routeObject = routeArray[i];
+			name = routeObject.name;
+			url = routeObject.url;
+			//have to use .to and .name because Sherpa is annoying like that
+			//consider switching to a different router at some point
+			this.router.add(this.baseUrl + url, routeObject).to(name).name(name);
+		}
+		du.extend(this.router, routeObject);
+	},
 	get: du.getterSetterCreator('routes'),
 	recognize: function (fullUrl) {
 		return this.router.recognize(fullUrl);
@@ -260,11 +290,28 @@ Doppelganger.Router.prototype = {
 	generate: function (name, params) {
 		//because Sherpa mutates params we hand it a copy instead.
 		return this.router.generate(name, du.extend({}, params));
+	},
+	trigger: function(destination, params) {
+		return Doppelganger.Routes[destination].invoke(this.app, params);
+	}
+};
+//Namespace for all of Doppelganger's built in Routers.
+Doppelganger.Routes = {};
+//Constructor for a routers.
+Doppelganger.Route = Route = function(name, route){
+	this.name = name;
+	this.route = route;
+	Doppelganger.Routes[name] = this;
+};
+
+Route.prototype = {
+	invoke: function(app, routeData){
+		this.route.call(app, routeData);
 	}
 };
 //iterator is stored here in order to provide safe mutation of filters (add/remove) during process.
 var filterIterator = 0;
-Doppelganger.FilterManager = function(app){
+Doppelganger.FilterManager = FilterManager = function(app){
 	this.filters = [];
 	this.app = app;
 };
@@ -280,9 +327,10 @@ Doppelganger.FilterManager.prototype = {
             this.filters.splice(idx, 1);
         }
     },
-    process: function(app, routeData){
+    process: function(routeData){
         for (filterIterator = 0; filterIterator < this.filters.length; filterIterator++) {
-            routeData = this.filters[filterIterator].apply(this.app, routeData);
+			var filterName = this.filters[filterIterator];
+			routeData = Doppelganger.Filters[filterName].invoke(this.app, routeData);
         }
     }
 };
@@ -292,15 +340,16 @@ Doppelganger.Filters = {};
 Doppelganger.Filter = Filter = function(name, filter){
 	this.name = name;
 	this.filter = filter;
+	Doppelganger.Filters[name] = filter;
 };
 
 Filter.prototype = {
-	apply: function(app, routeData){
-		this.filter.call(app, routeData);
+	invoke: function(app, routeData){
+		return this.filter.call(app, routeData);
 	}
 };
 //@todo implement routeData
-Doppelganger.Filters.RouterFilter = new Filter('Router', function(routeData){
+Doppelganger.Filters.RouterFilter = new Filter('RouterFilter', function(routeData){
 	if (!(routeData.destination && routeData.params)) {
 		// On initial load, all routerData will be empty.
 		// This is a deep extend in order to combine query and path parameters.
@@ -309,11 +358,7 @@ Doppelganger.Filters.RouterFilter = new Filter('Router', function(routeData){
 	}
 	
 	if (routeData.destination) {
-		//@todo trigger route
-		//router = du.extend(router, root.helpers.routing.trigger(routeData.destination, routeData.params));
-	} else {
-		//@todo do filters execute in the context of the application?
-		this.navigate.apply(root, root.DEFAULT_ROUTE);
+		routeData = du.extend(routeData, this.routeManager.trigger(routeData.destination, routeData.params));
 	}
 	
 	return routeData;
@@ -358,13 +403,21 @@ function unbindEvents(events) {
 //could continue to use closures but I'm concerned about leaking across files.
 var previousEvents = [];
 //@todo implement routeData
-Doppelganger.Filters.EventFilter = new Filter('Event', function(routeData){
+Doppelganger.Filters.EventFilter = new Filter('EventFilter', function(routeData){
 	if (!routeData.partial) {
 		//Use apply to bind to this some `app` context?
 		unbindEvents(previousEvents);
 	}
 	previousEvents = previousEvents.concat(bindEvents(routeData.events));
 	return routeData;
+});
+
+Doppelganger.Filters.QueryParamFilter = new Filter('QueryParamFilter', function(routeData){	
+    if (!(routeData && routeData.params)) {
+        // Only need to read query parameters on first load.
+        routeData = $.extend(routeData, {params: Arg.all()});
+    }
+    return routeData;
 });
 
 })(this);
