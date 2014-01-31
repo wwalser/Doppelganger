@@ -1130,7 +1130,7 @@ Doppelganger.Filters = {};
 Doppelganger.Filter = Filter = function(name, filter){
 	this.name = name;
 	this.filter = filter;
-	Doppelganger.Filters[name] = filter;
+	Doppelganger.Filters[name] = this;
 };
 
 Filter.prototype = {
@@ -1139,7 +1139,7 @@ Filter.prototype = {
 	}
 };
 //@todo implement routeData
-Doppelganger.Filters.RouterFilter = new Filter('RouterFilter', function(routeData){
+(new Filter('RouterFilter', function(routeData){
 	if (!(routeData.destination && routeData.params)) {
 		// On initial load, all routerData will be empty.
 		// This is a deep extend in order to combine query and path parameters.
@@ -1148,11 +1148,11 @@ Doppelganger.Filters.RouterFilter = new Filter('RouterFilter', function(routeDat
 	}
 	
 	if (routeData.destination) {
-		routeData = du.extend(routeData, this.routeManager.trigger(routeData.destination, routeData.params));
+		routeData = du.extend(routeData, this.routeManager.trigger(routeData.destination, routeData));
 	}
 	
 	return routeData;
-});
+}));
 
 function bindEvents(events) {
 	var eventData = [];
@@ -1193,21 +1193,21 @@ function unbindEvents(events) {
 //could continue to use closures but I'm concerned about leaking across files.
 var previousEvents = [];
 //@todo implement routeData
-Doppelganger.Filters.EventFilter = new Filter('EventFilter', function(routeData){
+(new Filter('EventFilter', function(routeData){
 	if (!routeData.partial) {
 		//Use apply to bind to this some `app` context?
 		unbindEvents(previousEvents);
 	}
 	previousEvents = previousEvents.concat(bindEvents(routeData.events));
 	return routeData;
-});
+}));
 
-Doppelganger.Filters.QueryParamFilter = new Filter('QueryParamFilter', function(routeData){	
+(new Filter('QueryParamFilter', function(routeData){	
     if (!(routeData && routeData.params)) {
         // Only need to read query parameters on first load.
         routeData = $.extend(routeData, {params: Arg.all()});
     }
     return routeData;
-});
+}));
 
 })(this);
