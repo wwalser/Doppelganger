@@ -36,12 +36,10 @@ module.exports = function(grunt) {
 			},
 			dist: {
 				src: ['lib/intro.js', 
-					'lib/main.js', 
 					'lib/util.js',
+					'lib/main.js', 
 					'lib/RouteManager.js',
-					'lib/Route.js',
 					'lib/FilterManager.js',
-					'lib/filters/Filter.js',
 					'lib/filters/RouterFilter.js',
 					'lib/filters/EventFilter.js',
 					'lib/filters/QueryParamFilter.js',

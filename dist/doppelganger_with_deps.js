@@ -792,9 +792,18 @@ Sherpa.Path.prototype = {
 	'use strict';
 	//main Doppelganger constructor.
 	var Doppelganger;
+	Doppelganger = function(){
+		this.routes = {};
+		this.filters = {};
+	};
+	if ( typeof module === "object" && typeof module.exports === "object" ) {
+		module.exports = Doppelganger;
+	} else {
+		root['Doppelganger'] = Doppelganger;
+	}
 
 	//Doppelganger objects
-	var Filter, FilterManager, Route, RouteManager;
+	var FilterManager, RouteManager;
 
 	//Doppelganger utils and selector
 	var du, $;
@@ -814,92 +823,6 @@ Sherpa.Path.prototype = {
 	//Supplied by dependencies
 	var Sherpa = root.Sherpa || {Router: function(){}};
 	var Arg = root.Arg || {all: function(){}};
-Doppelganger = function(){
-	this.routes = {};
-	this.filters = {};
-};
-if ( typeof module === "object" && typeof module.exports === "object" ) {
-	module.exports = Doppelganger;
-} else {
-	root['Doppelganger'] = Doppelganger;
-}
-
-var defaults = {
-	filters: ['EventFilter', 'RouterFilter'],
-	routes: {'index': ''}
-};
-var defaultAppObjectFields = {'routes': 'routeManager', 'filters': 'filterManager'};
-Doppelganger.prototype = {
-	create: function(appObj){
-		var field, propertyValue;
-		this.options = du.extend({}, defaults, appObj.options);
-		this.filterManager = new Doppelganger.FilterManager(this);
-		this.routeManager = new Doppelganger.RouteManager(this, appObj.rootUrl);
-		for (var property in defaultAppObjectFields) {
-			if (defaultAppObjectFields.hasOwnProperty(property)){
-				field = defaultAppObjectFields[property];
-				propertyValue = appObj[property] || this.options[property];
-				this[field]['add'](appObj[property]);
-			}
-		}
-		return this;
-	},
-	init: function(){
-		var self = this;
-		//do fancy things.
-		History.Adapter.bind(window,'statechange', function(){
-			var state = History.getState();
-			//Fire filter chain.
-			if (!state.data || !state.data.controllerStateChange) {
-				//if controllerStateChange is true a controller has triggered this state change.
-				//Otherwise use filter chain.
-				self.trigger(state.data.destination, state.data.params);
-			}
-		});
-		this.startPage = this.routeManager.recognize(window.location.pathname);
-		this.navigate();
-	},
-
-	navigate: function(){
-		//on initial load fire filter chain. On subsequent calls push state and the statechange handler will fire filters.
-		this.navigate = function(name, params){
-			//if pushstate, just use a full page reload.
-			if (history.pushState) {
-				History.pushState({destination: name, params: params}, document.title, this.routeManager.generate(name, params));
-			} else {
-				root.location = root.helpers.routing.generate(name, params);
-			}
-		};
-		if (this.startPage) {
-			//if the page that we are on is a valid route we can show that page
-			this.filterManager.process(this.startPage);
-		} else {
-			//otherwise we've navigated somewhere that delivered the application but isn't
-			//a valid route, navigate to the defaultRoute.
-			this.navigate(this.options.defaultRoute[0], this.options.defaultRoute[1]);
-		}
-	},
-
-	/**
-	 * Ideally this is relatively unused. The navigate method could just handle whether something is a refresh or a
-	 * navigation change, but History.js doesn't fire a statechange if it's just a refresh so we need some way to 
-	 * invoke the filter manager. This can also be useful for UI state transitions which want to take advantage of
-	 * filter functionality without changing the URL.
-	 * @param name
-	 * @param params
-	 */
-	trigger: function (name, params) {
-		this.filterManager.process({ destination: name, params: params });
-	},
-	updateContent: function (html) {
-		var $pageContent = $(this.PAGE_CONTENT_SELECTOR);
-		//@todo remove this comment when after createing a filter that removes these in UM.
-		//$pageContent.children().not('.' + root.UMFlashMessage.messageClass).remove();
-		return $pageContent.append(html);
-	}
-};
-
-
 Doppelganger.util = du = {
 //Add routes and filters. 
 	getterSetterCreator: function (name){
@@ -1051,6 +974,89 @@ Doppelganger.util = du = {
 $ = du.$;
 
 
+var defaults = {
+	filters: ['EventFilter', 'RouterFilter'],
+	routes: {'index': ''}
+};
+var defaultAppObjectFields = {'routes': 'routeManager', 'filters': 'filterManager'};
+Doppelganger.prototype = {
+	create: function(appObj){
+		var field, propertyValue;
+		this.options = du.extend({}, defaults, appObj.options);
+		this.filterManager = new Doppelganger.FilterManager(this);
+		this.routeManager = new Doppelganger.RouteManager(this, appObj.rootUrl);
+		for (var property in defaultAppObjectFields) {
+			if (defaultAppObjectFields.hasOwnProperty(property)){
+				field = defaultAppObjectFields[property];
+				propertyValue = appObj[property] || this.options[property];
+				this[field]['add'](appObj[property]);
+			}
+		}
+		return this;
+	},
+	init: function(){
+		var self = this;
+		//do fancy things.
+		History.Adapter.bind(window,'statechange', function(){
+			var state = History.getState();
+			//Fire filter chain.
+			if (!state.data || !state.data.controllerStateChange) {
+				//if controllerStateChange is true a controller has triggered this state change.
+				//Otherwise use filter chain.
+				self.trigger(state.data.destination, state.data.params);
+			}
+		});
+		this.startPage = this.routeManager.recognize(window.location.pathname);
+		this.navigate();
+	},
+
+	navigate: function(){
+		//on initial load fire filter chain. On subsequent calls push state and the statechange handler will fire filters.
+		this.navigate = function(name, params){
+			//if pushstate, just use a full page reload.
+			if (history.pushState) {
+				History.pushState({destination: name, params: params}, document.title, this.routeManager.generate(name, params));
+			} else {
+				root.location = root.helpers.routing.generate(name, params);
+			}
+		};
+		if (this.startPage) {
+			//if the page that we are on is a valid route we can show that page
+			this.filterManager.process(this.startPage);
+		} else {
+			//otherwise we've navigated somewhere that delivered the application but isn't
+			//a valid route, navigate to the defaultRoute.
+			this.navigate(this.options.defaultRoute[0], this.options.defaultRoute[1]);
+		}
+	},
+
+	/**
+	 * Ideally this is relatively unused. The navigate method could just handle whether something is a refresh or a
+	 * navigation change, but History.js doesn't fire a statechange if it's just a refresh so we need some way to 
+	 * invoke the filter manager. This can also be useful for UI state transitions which want to take advantage of
+	 * filter functionality without changing the URL.
+	 * @param name
+	 * @param params
+	 */
+	trigger: function (name, params) {
+		this.filterManager.process({ destination: name, params: params });
+	},
+	updateContent: function (html) {
+		var $pageContent = $(this.PAGE_CONTENT_SELECTOR);
+		//@todo remove this comment when after createing a filter that removes these in UM.
+		//$pageContent.children().not('.' + root.UMFlashMessage.messageClass).remove();
+		return $pageContent.append(html);
+	}
+};
+
+Doppelganger.RouteHandlers = {};
+Doppelganger.setRouteHandler = du.getterSetterCreator('RouteHandlers');
+Doppelganger.getRouteHandler = du.getterSetterCreator('RouteHandlers');
+
+Doppelganger.FilterHandlers = {};
+Doppelganger.setFilterHandler = du.getterSetterCreator('FilterHandlers');
+Doppelganger.getFilterHandler = du.getterSetterCreator('FilterHandlers');
+
 Doppelganger.RouteManager = RouteManager = function(app, rootUrl) {
 	this.app = app;
 	this.router = new Sherpa.Router(),
@@ -1081,22 +1087,8 @@ Doppelganger.RouteManager.prototype = {
 		//because Sherpa mutates params we hand it a copy instead.
 		return this.router.generate(name, du.extend({}, params));
 	},
-	trigger: function(destination, params) {
-		return Doppelganger.Routes[destination].invoke(this.app, params);
-	}
-};
-//Namespace for all of Doppelganger's built in Routers.
-Doppelganger.Routes = {};
-//Constructor for a routers.
-Doppelganger.Route = Route = function(name, route){
-	this.name = name;
-	this.route = route;
-	Doppelganger.Routes[name] = this;
-};
-
-Route.prototype = {
-	invoke: function(app, routeData){
-		this.route.call(app, routeData);
+	trigger: function(destination, routeData) {
+		return Doppelganger.getRouteHandler(destination).call(this.app, routeData);
 	}
 };
 //iterator is stored here in order to provide safe mutation of filters (add/remove) during process.
@@ -1120,26 +1112,12 @@ Doppelganger.FilterManager.prototype = {
     process: function(routeData){
         for (filterIterator = 0; filterIterator < this.filters.length; filterIterator++) {
 			var filterName = this.filters[filterIterator];
-			routeData = Doppelganger.Filters[filterName].invoke(this.app, routeData);
+			routeData = Doppelganger.getFilterHandler(filterName).call(this.app, routeData);
         }
     }
 };
-//Namespace for all of Doppelganger's built in Filters.
-Doppelganger.Filters = {};
-//Constructor for a filters.
-Doppelganger.Filter = Filter = function(name, filter){
-	this.name = name;
-	this.filter = filter;
-	Doppelganger.Filters[name] = this;
-};
-
-Filter.prototype = {
-	invoke: function(app, routeData){
-		return this.filter.call(app, routeData);
-	}
-};
 //@todo implement routeData
-(new Filter('RouterFilter', function(routeData){
+Doppelganger.setFilterHandler('RouterFilter', function(routeData){
 	if (!(routeData.destination && routeData.params)) {
 		// On initial load, all routerData will be empty.
 		// This is a deep extend in order to combine query and path parameters.
@@ -1152,7 +1130,7 @@ Filter.prototype = {
 	}
 	
 	return routeData;
-}));
+});
 
 function bindEvents(events) {
 	var eventData = [];
@@ -1193,21 +1171,21 @@ function unbindEvents(events) {
 //could continue to use closures but I'm concerned about leaking across files.
 var previousEvents = [];
 //@todo implement routeData
-(new Filter('EventFilter', function(routeData){
+Doppelganger.setFilterHandler('EventFilter', function(routeData){
 	if (!routeData.partial) {
 		//Use apply to bind to this some `app` context?
 		unbindEvents(previousEvents);
 	}
 	previousEvents = previousEvents.concat(bindEvents(routeData.events));
 	return routeData;
-}));
+});
 
-(new Filter('QueryParamFilter', function(routeData){	
+Doppelganger.setFilterHandler('QueryParamFilter', function(routeData){	
     if (!(routeData && routeData.params)) {
         // Only need to read query parameters on first load.
         routeData = $.extend(routeData, {params: Arg.all()});
     }
     return routeData;
-}));
+});
 
 })(this);
