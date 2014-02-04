@@ -1006,8 +1006,7 @@ Doppelganger.prototype = {
 				self.trigger(state.data.destination, state.data.params);
 			}
 		});
-		this.startPage = du.extend({}, this.routeManager.recognize(window.location.pathname));
-		this.startPage.params = du.extend(this.startPage.params, Arg.all());
+		this.startPage = this.routeManager.recognize(window.location.pathname);
 		this.navigate();
 	},
 
@@ -1023,6 +1022,8 @@ Doppelganger.prototype = {
 		};
 		if (this.startPage) {
 			//if the page that we are on is a valid route we can show that page
+			this.startPage = du.extend({}, this.startPage);
+			this.startPage.params = du.extend(this.startPage.params, Arg.all());
 			this.filterManager.process(this.startPage);
 		} else {
 			//otherwise we've navigated somewhere that delivered the application but isn't
@@ -1179,14 +1180,6 @@ Doppelganger.setFilterHandler('EventFilter', function(routeData){
 	}
 	previousEvents = previousEvents.concat(bindEvents(routeData.events));
 	return routeData;
-});
-
-Doppelganger.setFilterHandler('QueryParamFilter', function(routeData){	
-    if (!(routeData && routeData.params)) {
-        // Only need to read query parameters on first load.
-        routeData = $.extend(routeData, {params: Arg.all()});
-    }
-    return routeData;
 });
 
 })(this);
