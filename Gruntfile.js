@@ -42,7 +42,6 @@ module.exports = function(grunt) {
 					'lib/FilterManager.js',
 					'lib/filters/RouterFilter.js',
 					'lib/filters/EventFilter.js',
-					'lib/filters/QueryParamFilter.js',
 					'lib/outro.js'],
 				dest: 'dist/doppelganger.js'
 			},

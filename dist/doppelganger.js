@@ -216,7 +216,8 @@ Doppelganger.prototype = {
 				self.trigger(state.data.destination, state.data.params);
 			}
 		});
-		this.startPage = this.routeManager.recognize(window.location.pathname);
+		this.startPage = du.extend({}, this.routeManager.recognize(window.location.pathname));
+		this.startPage.params = du.extend(this.startPage.params, Arg.all());
 		this.navigate();
 	},
 
