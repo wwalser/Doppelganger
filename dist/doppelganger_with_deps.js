@@ -1149,7 +1149,7 @@ function bindEvents(events) {
 	if (!events) {
 		return eventData;
 	}
-	du.each(events, function (eventDescriptor, callback) {
+	du.each(events, function (callback, eventDescriptor) {
 		var chunks = eventDescriptor.split(" "),
 		eventName = chunks[0].replace(/,/g, ' '),
 		selector = chunks.slice(1).join(" "),
