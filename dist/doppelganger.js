@@ -185,25 +185,35 @@ $ = du.$;
 
 
 var defaults = {
-	filters: ['EventFilter', 'RouterFilter'],
-	routes: {'index': ''}
+	routes: {'index': ''},
+	filters: ['EventFilter', 'RouterFilter']
 };
 var defaultAppObjectFields = {'routes': 'routeManager', 'filters': 'filterManager'};
-Doppelganger.prototype = {
-	create: function(appObj){
-		var field, propertyValue;
-		this.options = du.extend({}, defaults, appObj.options);
-		this.filterManager = new Doppelganger.FilterManager(this);
-		this.routeManager = new Doppelganger.RouteManager(this, appObj.rootUrl);
-		for (var property in defaultAppObjectFields) {
-			if (defaultAppObjectFields.hasOwnProperty(property)){
-				field = defaultAppObjectFields[property];
-				propertyValue = appObj[property] || this.options[property];
-				this[field]['add'](appObj[property]);
-			}
+
+/**
+ * Create a new Doppelganger application.
+ */
+Doppelganger.create = function(appObj){
+	var app = new Doppelganger();
+	var field, propertyValue;
+	app.options = du.extend({}, defaults, appObj.options);
+	app.filterManager = new Doppelganger.FilterManager(app);
+	app.routeManager = new Doppelganger.RouteManager(app, appObj.rootUrl);
+	//Setup routes and filters that this application will use
+	for (var property in defaultAppObjectFields) {
+		if (defaultAppObjectFields.hasOwnProperty(property)){
+			//respective handler for this property type [ex: 'filterManager']
+			field = defaultAppObjectFields[property];
+			//if the value isn't provided, fallback to defaults [ex: defaults.filters]
+			propertyValue = appObj[property] || app.options[property];
+			//call the add method on respective handler [ex: app.filterManager.add(defaults.filters)]
+			app[field]['add'](propertyValue);
 		}
-		return this;
-	},
+	}
+	return app;
+};
+
+Doppelganger.prototype = {
 	init: function(){
 		var self = this;
 		//do fancy things.

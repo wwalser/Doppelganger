@@ -8,7 +8,6 @@ exports['basic'] = {
 		done();
 	},
 	'Successful Test': function(test) {
-		var app = new Doppelganger();
 		//can't test routes until we remove sherpa or use a browser for testing.
 		//routes are objects
 		// var routes = {
@@ -19,7 +18,7 @@ exports['basic'] = {
 		var filters = [
 			'bar','baz'
 		];
-		app.create({
+		var app = Doppelganger.create({
 			routes: [],
 			filters: filters
 		});
