@@ -33,6 +33,7 @@
 	//Supplied by dependencies
 	var Sherpa = root.Sherpa || {Router: function(){}};
 	var Arg = root.Arg || {all: function(){}};
+var boundEvents = {};
 Doppelganger.util = du = {
 //Add routes and filters. 
 	getterSetterCreator: function (name){
@@ -176,10 +177,41 @@ Doppelganger.util = du = {
             // Caller must ensure support for event listeners is present
             throw new Error( "addEvent() was called in a context without event listener support" );
         }
+		if (!boundEvents[type]) {
+			boundEvents[type] = [];
+		}
+		boundEvents[type].push({
+			fn: eventProxy,
+			boundFn: fn,
+			selector: typeof selector === 'string' ? selector : '',
+		});
 	},
-	removeEvent: function(type, selector, fn){
-		//@todo implement (remove return, just there for lint)
-		return [type, selector, fn];
+	removeEvent: function(elem, type, selector, fn){
+		var potentialEvents = boundEvents[type],
+			length = potentialEvents ? potentialEvents.length : 0,
+			i = 0,
+			currentEvent, boundFn;
+
+		for (; i < length; i++) {
+			currentEvent = potentialEvents[i];
+			if (fn === currentEvent.fn && selector === currentEvent.selector) {
+				boundFn = currentEvent.boundFn;
+				potentialEvents.splice(i, 1);
+				break;
+			}
+		}
+
+		if (boundFn) {
+			if (elem.removeEventListener) {
+				// Standards-based browsers
+				elem.removeEventListener(type, boundFn);
+			} else if (elem.detachEvent) {
+				// support: IE <9
+				elem.detachEvent(type, boundFn);
+			} else {
+				throw new Error( "removeEvent() was called in a context without event listener support" );
+			}
+		}
 	}
 };
 $ = du.$;
@@ -362,22 +394,26 @@ function bindEvents(events) {
 	}
 	du.each(events, function (callback, eventDescriptor) {
 		var chunks = eventDescriptor.split(" "),
-		eventName = chunks[0].replace(/,/g, ' '),
-		selector = chunks.slice(1).join(" "),
-		oldCallback = callback;
+			eventName = chunks[0].replace(/,/g, ' '),
+			selector = chunks.slice(1).join(" "),
+			oldCallback = callback,
+			elem;
 		
 		// We need to treat the callback for URL state change differently.
 		if (eventName === "statechange") {
+			elem = window;
 			callback = function() {
 				var data = History.getState().data.query;
 				oldCallback(data);
 			};
-			du.addEvent(window, eventName, callback);
+			du.addEvent(elem, eventName, callback);
 		} else {
-			du.addEvent(document, eventName, selector, callback);
+			elem = document;
+			du.addEvent(elem, eventName, selector, callback);
 		}
 		
-		eventData.push({name: eventName, selector: selector, callback: callback});
+		eventData.push({name: eventName, selector: selector, callback: callback, elem: elem});
+		
 	});
 	return eventData;
 }
@@ -386,8 +422,8 @@ function unbindEvents(events) {
 	if (events.length === 0) {
 		return;
 	}
-	du.each(events, function (i, eventData) {
-		du.removeEvent(eventData.name, eventData.selector, eventData.callback);
+	du.each(events, function (eventData) {
+		du.removeEvent(eventData.elem, eventData.name, eventData.selector, eventData.callback);
 	});
 }
 //@todo implement a way of initlizing data within filter.
