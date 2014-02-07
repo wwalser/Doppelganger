@@ -930,6 +930,9 @@ Doppelganger.util = du = {
 		}
 		// append to fragment if no parent
 		if ( !elem.parentNode ) {
+			if (elem === document) {
+				return selector === 'document';
+			}
 			fragment = document.createDocumentFragment();
 			fragment.appendChild( elem );
 		}
@@ -945,12 +948,24 @@ Doppelganger.util = du = {
 		// otherwise return false
 		return false;
 	},
+	closest: function(elem, selector) {
+		var current = elem,
+			found = false;
+		while (current != null) {
+			found = du.matchesSelector(current, selector);
+			if (found) {
+				break;
+			}
+			current = current.parentNode;
+		}
+		return found;
+	},
 	addEvent: function( elem, type, selector, fn ) {
 		var eventProxy = fn;
 		if (fn) {
 			fn = function(event){
 				var target = event.target || event.srcElement;
-				if (du.matchesSelector(target, selector)) {
+				if (du.closest(target, selector)) {
 					eventProxy.apply(this, arguments);
 				}
 			};
@@ -1184,26 +1199,29 @@ function bindEvents(events) {
 	}
 	du.each(events, function (callback, eventDescriptor) {
 		var chunks = eventDescriptor.split(" "),
-			eventName = chunks[0].replace(/,/g, ' '),
+			eventNames = chunks[0].split(','),
 			selector = chunks.slice(1).join(" "),
 			oldCallback = callback,
 			elem;
 		
 		// We need to treat the callback for URL state change differently.
-		if (eventName === "statechange") {
-			elem = window;
-			callback = function() {
-				var data = History.getState().data.query;
-				oldCallback(data);
-			};
-			du.addEvent(elem, eventName, callback);
-		} else {
-			elem = document;
-			du.addEvent(elem, eventName, selector, callback);
-		}
-		
-		eventData.push({name: eventName, selector: selector, callback: callback, elem: elem});
-		
+		du.each(eventNames, function(eventName){
+			var wes = eventNames.length;
+			if (eventName === "statechange") {
+				elem = window;
+				callback = function() {
+					var data = History.getState().data.query;
+					oldCallback(data);
+				};
+				du.addEvent(elem, eventName, callback);
+			} else {
+				elem = document;
+				du.addEvent(elem, eventName, selector, callback);
+			}
+			
+			eventData.push({name: eventName, selector: selector, callback: callback, elem: elem});
+			return wes;
+		});
 	});
 	return eventData;
 }
