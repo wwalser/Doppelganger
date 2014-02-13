@@ -42,7 +42,7 @@ Doppelganger.util = du = {
 			if (typeof key !== "string") {
 				if (du.isArray(obj)) {
 					if (du.isArray(key)) {
-						obj.concat(key);
+						arrayProto.push.apply(obj, key);
 					} else {
 						obj.push(key);
 					}
@@ -56,9 +56,6 @@ Doppelganger.util = du = {
 			}
 		};
 	},
-	capitolize: function(str){
-		return str.charAt(0).toUpperCase() + str.slice(1);
-	},
 	extend: function(obj){
 		var iterable = slice.call(arguments, 1),
 			source, i, prop;
@@ -66,7 +63,9 @@ Doppelganger.util = du = {
 			source = iterable[i];
 			if (source) {
 				for (prop in source) {
-					obj[prop] = source[prop];
+					if (source.hasOwnProperty(prop)) {
+						obj[prop] = source[prop];
+					}
 				}
 			}
 		}
@@ -198,7 +197,7 @@ Doppelganger.util = du = {
 		boundEvents[type].push({
 			fn: eventProxy,
 			boundFn: fn,
-			selector: typeof selector === 'string' ? selector : '',
+			selector: typeof selector === 'string' ? selector : ''
 		});
 	},
 	removeEvent: function(elem, type, selector, fn){
@@ -416,7 +415,6 @@ function bindEvents(events) {
 		
 		// We need to treat the callback for URL state change differently.
 		du.each(eventNames, function(eventName){
-			var wes = eventNames.length;
 			if (eventName === "statechange") {
 				elem = window;
 				callback = function() {
@@ -430,7 +428,6 @@ function bindEvents(events) {
 			}
 			
 			eventData.push({name: eventName, selector: selector, callback: callback, elem: elem});
-			return wes;
 		});
 	});
 	return eventData;
