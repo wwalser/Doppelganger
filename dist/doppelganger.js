@@ -267,10 +267,12 @@ Doppelganger.prototype = {
 		History.Adapter.bind(window,'statechange', function(){
 			var state = History.getState();
 			//Fire filter chain.
-			if (!state.data || !state.data.controllerStateChange) {
+			if (state.data.destination && !state.data.controllerStateChange) {
 				//if controllerStateChange is true a controller has triggered this state change.
 				//Otherwise use filter chain.
 				self.trigger(state.data.destination, state.data.params);
+			} else if (!state.data.destination) {
+				self.trigger(self.startPage.destination, self.startPage.params);
 			}
 		});
 		this.startPage = this.routeManager.recognize(window.location.pathname);
@@ -291,7 +293,7 @@ Doppelganger.prototype = {
 			//if the page that we are on is a valid route we can show that page
 			this.startPage = du.extend({}, this.startPage);
 			this.startPage.params = du.extend(this.startPage.params, Arg.all());
-			this.filterManager.process(this.startPage);
+			this.trigger(this.startPage.destination, this.startPage.params);
 		} else {
 			//otherwise we've navigated somewhere that delivered the application but isn't
 			//a valid route, navigate to the defaultRoute.
