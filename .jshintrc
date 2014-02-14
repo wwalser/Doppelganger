@@ -18,6 +18,11 @@
     "document": true,
     "History": true,
     "history": true,
-    "Sherpa": true
+    "Sherpa": true,
+    "module": true,
+    "test": true,
+    "equal": true,
+    "ok": true,
+    "expect": true
   }
 }

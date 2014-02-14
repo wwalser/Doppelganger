@@ -3,8 +3,8 @@
 module.exports = function(grunt) {
 	var defaultTasks = [
 		'concat:dist',
-		'jshint', 
-		'nodeunit', 
+		'jshint',
+		'qunit',
 		'uglify:dist', 
 		'concat:withDeps', 
 		'uglify:withDeps'];
@@ -12,8 +12,8 @@ module.exports = function(grunt) {
 	// Project configuration.
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
-		nodeunit: {
-			files: ['test/**/*_test.js'],
+		qunit: {
+			all: ['test/**/*.html'],
 		},
 		jshint: {
 			options: {
@@ -26,7 +26,7 @@ module.exports = function(grunt) {
 				src: ['dist/doppelganger.js']
 			},
 			test: {
-				src: ['test/**/*.js']
+				src: ['test/*.js']
 			},
 		},
 		concat: {
@@ -78,13 +78,13 @@ module.exports = function(grunt) {
 			},
 			test: {
 				files: '<%= jshint.test.src %>',
-				tasks: ['jshint:test', 'nodeunit']
+				tasks: ['jshint:test', 'qunit']
 			},
 		},
 	});
 	
 	// These plugins provide necessary tasks.
-	grunt.loadNpmTasks('grunt-contrib-nodeunit');
+	grunt.loadNpmTasks('grunt-contrib-qunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
