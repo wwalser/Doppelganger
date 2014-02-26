@@ -19,10 +19,12 @@
     "History": true,
     "history": true,
     "Sherpa": true,
+    "Arg": true,
     "module": true,
     "test": true,
     "equal": true,
     "ok": true,
-    "expect": true
+    "expect": true,
+    "alert": true
   }
 }

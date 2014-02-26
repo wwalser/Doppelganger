@@ -4,10 +4,11 @@ module.exports = function(grunt) {
 	var defaultTasks = [
 		'concat:dist',
 		'jshint',
-		'qunit',
 		'uglify:dist', 
 		'concat:withDeps', 
-		'uglify:withDeps'];
+		'uglify:withDeps',
+		'qunit',
+	];
 
 	// Project configuration.
 	grunt.initConfig({

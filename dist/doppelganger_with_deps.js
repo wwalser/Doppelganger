@@ -820,9 +820,7 @@ Sherpa.Path.prototype = {
 	var nativeIndexOf = arrayProto.indexOf;
 	var document = root.document || {};
 
-	//Supplied by dependencies
-	var Sherpa = root.Sherpa || {Router: function(){}};
-	var Arg = root.Arg || {all: function(){}};
+
 var boundEvents = {};
 Doppelganger.util = du = {
 //Add routes and filters. 
@@ -1122,7 +1120,7 @@ Doppelganger.RouteManager = RouteManager = function(app, rootUrl) {
 	this.app = app;
 	this.router = new Sherpa.Router(),
 	this.baseUrl = rootUrl;
-	this.routes = {};
+	this.routes = [];
 };
 Doppelganger.RouteManager.prototype = {
 	add: function(routeArray){
@@ -1138,8 +1136,9 @@ Doppelganger.RouteManager.prototype = {
 			//consider switching to a different router at some point
 			this.router.add(this.baseUrl + url, routeObject).to(name).name(name);
 		}
-		du.extend(this.router, routeObject);
+		this.set(routeArray);
 	},
+	set: du.getterSetterCreator('routes'),
 	get: du.getterSetterCreator('routes'),
 	recognize: function (fullUrl) {
 		return this.router.recognize(fullUrl);

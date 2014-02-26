@@ -23,7 +23,7 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "grunt nodeunit"
+    "test": "grunt qunit"
   },
   "dependencies": {
 	  "history.js": "1.8.0"
