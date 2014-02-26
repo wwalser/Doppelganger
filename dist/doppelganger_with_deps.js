@@ -1020,8 +1020,9 @@ $ = du.$;
 
 
 var defaults = {
-	routes: {'index': ''},
-	filters: ['EventFilter', 'RouterFilter']
+	rootUrl: '',
+	routes: {name: 'index', url: ''},
+	filters: ['RouterFilter', 'EventFilter']
 };
 var defaultAppObjectFields = {'routes': 'routeManager', 'filters': 'filterManager'};
 
@@ -1031,16 +1032,16 @@ var defaultAppObjectFields = {'routes': 'routeManager', 'filters': 'filterManage
 Doppelganger.create = function(appObj){
 	var app = new Doppelganger();
 	var field, propertyValue;
-	app.options = du.extend({}, defaults, appObj.options);
+	app.options = du.extend({}, defaults, appObj);
 	app.filterManager = new Doppelganger.FilterManager(app);
-	app.routeManager = new Doppelganger.RouteManager(app, appObj.rootUrl);
+	app.routeManager = new Doppelganger.RouteManager(app, app.options.rootUrl);
 	//Setup routes and filters that this application will use
 	for (var property in defaultAppObjectFields) {
 		if (defaultAppObjectFields.hasOwnProperty(property)){
 			//respective handler for this property type [ex: 'filterManager']
 			field = defaultAppObjectFields[property];
 			//if the value isn't provided, fallback to defaults [ex: defaults.filters]
-			propertyValue = appObj[property] || app.options[property];
+			propertyValue = app.options[property];
 			//call the add method on respective handler [ex: app.filterManager.add(defaults.filters)]
 			app[field]['add'](propertyValue);
 		}

@@ -26,10 +26,8 @@ test('Basic filter setup', function() {
 	
 	//routes are objects
 	var routes = [
-		{name: 'route1', url: window.location.pathname},
-		{name: 'route2', url: "/route2"}
+		{name: 'route1', url: window.location.pathname}
 	];
-	Doppelganger.setRouteHandler('route1', function(){});
 	var filters = [
 		'bar'
 	];
@@ -41,6 +39,24 @@ test('Basic filter setup', function() {
 		rootUrl: '',
 		routes: routes,
 		filters: filters
+	});
+	app.init();
+});
+
+test('Basic route setup', function() {
+	expect(1);
+	
+	//routes are objects
+	var routes = [
+		{name: 'route1', url: window.location.pathname}
+	];
+	Doppelganger.setRouteHandler('route1', function(){
+		ok('route successfully setup');
+	});
+	
+	var app = Doppelganger.create({
+		rootUrl: '',
+		routes: routes
 	});
 	app.init();
 });
