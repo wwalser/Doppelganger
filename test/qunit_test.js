@@ -60,3 +60,32 @@ test('Basic route setup', function() {
 	});
 	app.init();
 });
+
+asyncTest('Basic event setup', function(){
+	expect(1);
+	
+	//routes are objects
+	var routes = [
+		{name: 'route1', url: window.location.pathname}
+	];
+	Doppelganger.setRouteHandler('route1', function(){
+		return {
+			events: {
+				'click #qunit': function(){
+					ok('event successfully bound');
+					start();
+				}
+			}
+		};
+	});
+	
+	var app = Doppelganger.create({
+		rootUrl: '',
+		routes: routes
+	});
+	app.init();
+
+	var evt = document.createEvent("MouseEvents");
+    evt.initMouseEvent("click", true);
+	document.getElementById('qunit').dispatchEvent(evt);
+});
