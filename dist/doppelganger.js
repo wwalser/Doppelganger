@@ -15,23 +15,24 @@
 	//Doppelganger objects
 	var FilterManager, RouteManager;
 
-	//Doppelganger utils and selector
-	var du, $;
-
-	//useful prototypes.
-	var arrayProto = Array.prototype;
-
-	//useful functions.
-	var slice = arrayProto.slice;
-
-	//natives
-	var nativeIsArray = arrayProto.isArray;
-	var nativeForEach = arrayProto.forEach;
-	var nativeIndexOf = arrayProto.indexOf;
 	var document = root.document || {};
 
 
+//***** Native adapter (default) *****
+//Doppelganger utils and selector
+var du, $;
+//useful protos
+var arrayProto = Array.prototype;
+//useful functions.
+var slice = arrayProto.slice;
+//natives
+var nativeIsArray = arrayProto.isArray;
+var nativeForEach = arrayProto.forEach;
+var nativeIndexOf = arrayProto.indexOf;
+
+//Events bound by du.util
 var boundEvents = {};
+
 Doppelganger.util = du = {
 //Add routes and filters. 
 	getterSetterCreator: function (name){
@@ -231,7 +232,7 @@ $ = du.$;
 
 var defaults = {
 	rootUrl: '',
-	routes: {name: 'index', url: ''},
+	routes: [{name: 'index', url: ''}],
 	filters: ['RouterFilter', 'EventFilter']
 };
 var defaultAppObjectFields = {'routes': 'routeManager', 'filters': 'filterManager'};

@@ -39,7 +39,17 @@ From the cli:
 npm install
 grunt
 ```
-More to come here. Will eventually support two alternative build. One with util adapters for jQuery and another for core only code.
+
+###Adapter builds
+Doppelgänger allows 'adapters' that can be used to slightly reduce the file size if you are already using common libraries. The only adapter currently provided is for jQuery.
+
+In order to build Doppelgänger using an adapter instead of the native code, clone the source and run a grunt build manually.
+From the cli:
+```
+npm install
+grunt adapter:jquery
+```
+This will generate a version of the full Doppelgänger source code inside the dist directory. Select the appropirate file for your needs.
 
 Release History
 ---------------

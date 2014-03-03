@@ -1,20 +1,25 @@
 'use strict';
 
 module.exports = function(grunt) {
-	var defaultTasks = [
-		'concat:dist',
-		'jshint',
-		'uglify:dist', 
-		'concat:withDeps', 
-		'uglify:withDeps',
-		'qunit',
-	];
+	function mainTasks(adapter) {
+		var adapterString = adapter ? ':' + adapter : '';
+		var tasks = [
+			'concat:dist' + adapterString,
+			'jshint',
+			'uglify:dist', 
+			'concat:withDeps', 
+			'uglify:withDeps',
+			'qunit:all' + adapterString,
+		];
+		return tasks;
+	}
 
 	// Project configuration.
 	grunt.initConfig({
+		defaultAdapter: 'native',
 		pkg: grunt.file.readJSON('package.json'),
 		qunit: {
-			all: ['test/**/*.html'],
+			all: ['test/doppelganger_<%= grunt.task.current.args[0] || defaultAdapter %>_test.html'],
 		},
 		jshint: {
 			options: {
@@ -30,14 +35,18 @@ module.exports = function(grunt) {
 				src: ['test/*.js']
 			},
 		},
+		adapter: {
+			jquery: "jquery",
+			native: "native"
+		},
 		concat: {
 			options: {
 				banner: '<%= banner %>',
 				stripBanners: true
 			},
 			dist: {
-				src: ['lib/intro.js', 
-					'lib/util.js',
+				src: ['lib/intro.js',
+					'lib/adapter/<%= grunt.task.current.args[0] || defaultAdapter %>.js',
 					'lib/main.js', 
 					'lib/RouteManager.js',
 					'lib/FilterManager.js',
@@ -75,7 +84,7 @@ module.exports = function(grunt) {
 			},
 			lib: {
 				files: ['lib/**/*.js'],
-				tasks: defaultTasks
+				tasks: mainTasks()
 			},
 			test: {
 				files: '<%= jshint.test.src %>',
@@ -92,6 +101,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	
 	// Default task.
-	grunt.registerTask('default', defaultTasks);
+	grunt.registerTask('default', mainTasks());
 	
+	grunt.registerMultiTask('adapter', function(){
+		grunt.task.run(mainTasks(this.target));
+	});
 };
