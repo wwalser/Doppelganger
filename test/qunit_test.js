@@ -85,7 +85,7 @@ asyncTest('Basic event setup', function(){
 	});
 	app.init();
 
-	var evt = document.createEvent("MouseEvents");
-    evt.initMouseEvent("click", true);
-	document.getElementById('qunit').dispatchEvent(evt);
+	var mouseEvent = document.createEvent("MouseEvents");
+    mouseEvent.initMouseEvent("click", true);
+	document.getElementById('qunit').dispatchEvent(mouseEvent);
 });
