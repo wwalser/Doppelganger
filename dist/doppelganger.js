@@ -38,17 +38,7 @@ Doppelganger.util = du = {
 	getterSetterCreator: function (name){
 		return function(key, value){
 			var obj = this[name];
-			if (typeof key !== "string") {
-				if (du.isArray(obj)) {
-					if (du.isArray(key)) {
-						arrayProto.push.apply(obj, key);
-					} else {
-						obj.push(key);
-					}
-				} else {
-					du.extend(obj, key);
-				}
-			} else if (!value) {
+			if (!value) {
 				return obj[key];
 			} else {
 				obj[key] = value;
@@ -348,10 +338,8 @@ Doppelganger.RouteManager.prototype = {
 			//consider switching to a different router at some point
 			this.router.add(this.baseUrl + url, routeObject).to(name).name(name);
 		}
-		this.set(routeArray);
+		this.routes = this.routes.concat(routeArray);
 	},
-	set: du.getterSetterCreator('routes'),
-	get: du.getterSetterCreator('routes'),
 	recognize: function (fullUrl) {
 		return this.router.recognize(fullUrl);
 	},
@@ -370,7 +358,9 @@ Doppelganger.FilterManager = FilterManager = function(app){
 	this.app = app;
 };
 Doppelganger.FilterManager.prototype = {
-	add: du.getterSetterCreator('filters'),
+	add: function(filterArray){
+		this.filters = this.filters.concat(filterArray);
+	},
     remove: function(filter){
         var idx = du.indexOf(filter, this.filters);
         if (idx !== false) {
