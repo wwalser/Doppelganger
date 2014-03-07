@@ -335,3 +335,30 @@ test('Filter can remove itself.', function(){
 	app.init();
 	app.trigger('route1', {});
 });
+
+module('router integration tests', {
+	setup: function(){
+		var pathWithoutFilename;
+		this.pathname = window.location.pathname;
+		pathWithoutFilename = this.pathname.substr(0, this.pathname.lastIndexOf("/"));
+		this.fileName = this.pathname.substr(this.pathname.lastIndexOf("/"));
+		this.folder = pathWithoutFilename;
+		this.testPath = '/foobar';
+	}
+});
+
+test('startPage lookup works as expected', function(){
+	expect(1);
+	var routes = [
+		{name: 'route1', url: this.fileName},
+		{name: 'route2', url: this.testPath}
+	];
+	Doppelganger.setRouteHandler('route1', function(){
+		ok('Things work');
+	});
+	var app = Doppelganger.create({
+		rootUrl: this.folder,
+		routes: routes
+	});
+	app.init();
+});
