@@ -92,7 +92,7 @@ asyncTest('Basic event setup', function(){
 	document.getElementById('qunit').dispatchEvent(mouseEvent);
 });
 
-module('FilterManager');
+module('Filter integration tests');
 
 test('Filters run in order they are registered', function(){
 	expect(2);
@@ -224,4 +224,82 @@ test('Filter can remove itself.', function(){
 	});
 	app.init();
 	app.trigger('route1', {});
+});
+
+module('RouteManager', {
+	setup: function(){
+		var pathWithoutFilename;
+		this.pathname = window.location.pathname;
+		pathWithoutFilename = this.pathname.substr(0, this.pathname.lastIndexOf("/"));
+		this.fileName = this.pathname.substr(this.pathname.lastIndexOf("/"));
+		this.folder = pathWithoutFilename;
+		this.testPath = '/foobar';
+	}
+});
+
+test('Add an array of route objects', function(){
+	expect(1);
+	var routes = [
+		{name: 'route1', url: this.fileName},
+		{name: 'route2', url: this.testPath}
+	];
+	var routeManager = new Doppelganger.RouteManager({}, this.folder);
+	try {
+		routeManager.add(routes);
+		ok('Add works');
+	} catch (e) {
+		ok(false, 'Add should just work.')
+	}
+});
+
+test('Add can be called multiple times', function(){
+	expect(1);
+	var routeManager = new Doppelganger.RouteManager({}, this.folder);
+	try {
+		routeManager.add([{name: 'route1', url: this.fileName}]);
+		routeManager.add([{name: 'route2', url: this.testPath}]);
+		ok('Add works');
+	} catch (e) {
+		ok(false, 'Add should just work.')
+	}
+});
+
+test('recognize', function(){
+	expect(1);
+	var routes = [
+		{name: 'route1', url: this.fileName},
+		{name: 'route2', url: this.testPath}
+	];
+	var routeManager = new Doppelganger.RouteManager({}, this.folder);
+	routeManager.add(routes);
+	equal(routeManager.recognize(this.folder + this.testPath)['destination'], 'route2', 'Route was recognized.');
+});
+
+test('generate', function(){
+	expect(2);
+	expectedPath1 = this.pathname;
+	var expectedPath2 = this.folder + this.testPath;
+	var routes = [
+		{name: 'route1', url: this.fileName},
+		{name: 'route2', url: this.testPath}
+	];
+	var routeManager = new Doppelganger.RouteManager({}, this.folder);
+	routeManager.add(routes);
+	equal(routeManager.generate('route1'), expectedPath1, 'route1 generated correctly');
+	equal(routeManager.generate('route2'), expectedPath2, 'route2 generated correctly.');
+});
+
+test('generate with query params', function(){
+	expect(2);
+	var expectedPath1 = this.pathname + '?foo=bar';
+	var expectedPath2 = this.folder + this.testPath + '?foo=bar';
+	var generateParameters = {foo: 'bar'};
+	var routes = [
+		{name: 'route1', url: this.fileName},
+		{name: 'route2', url: this.testPath}
+	];
+	var routeManager = new Doppelganger.RouteManager({}, this.folder);
+	routeManager.add(routes);
+	equal(routeManager.generate('route1', generateParameters), expectedPath1, 'route1 generated correctly');
+	equal(routeManager.generate('route2', generateParameters), expectedPath2, 'route2 generated correctly.');
 });
