@@ -92,6 +92,38 @@ asyncTest('Basic event setup', function(){
 	document.getElementById('qunit').dispatchEvent(mouseEvent);
 });
 
+module('FilterManager');
+
+test('Add an array of filters.', function(){
+	expect(1);
+	var filterManager = new Doppelganger.FilterManager({});
+	try {
+		filterManager.add(['test', 'foo', 'bar']);
+		ok('Adding an array of filters works correctly.');
+	} catch (e) {
+		ok(false, 'Adding an array of filters works properly.');
+	}
+});
+
+test('Multiple calls to add.', function(){
+	expect(1);
+	var filterSet1 = ['test', 'foo', 'bar'];
+	var filterSet2 = ['baz', 'qux'];
+	var filterManager = new Doppelganger.FilterManager({});
+	filterManager.add(filterSet1);
+	filterManager.add(filterSet2);
+	deepEqual(filterManager.filters, filterSet1.concat(filterSet2), 'Multiple filter sets can be added');
+});
+
+test('Multiple calls to add.', function(){
+	expect(1);
+	var filterSet1 = ['test', 'foo', 'bar'];
+	var filterManager = new Doppelganger.FilterManager({});
+	filterManager.add(filterSet1);
+	filterManager.remove('foo');
+	deepEqual(filterManager.filters, ['test', 'bar'], 'Multiple filter sets can be added');
+});
+
 module('RouteManager', {
 	setup: function(){
 		var pathWithoutFilename;

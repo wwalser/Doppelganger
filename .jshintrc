@@ -26,6 +26,7 @@
     "start": true,
     "stop": true,
     "equal": true,
+    "deepEqual": true,
     "ok": true,
     "expect": true,
     "alert": true
