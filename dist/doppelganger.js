@@ -276,7 +276,7 @@ Doppelganger.prototype = {
 			if (history.pushState) {
 				History.pushState({destination: name, params: params}, document.title, this.routeManager.generate(name, params));
 			} else {
-				root.location = root.helpers.routing.generate(name, params);
+				root.location = this.routeManager.generate(name, params);
 			}
 		};
 		if (this.startPage) {

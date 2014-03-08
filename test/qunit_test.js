@@ -362,3 +362,27 @@ test('startPage lookup works as expected', function(){
 	});
 	app.init();
 });
+
+test('Default route redirect.', function(){
+	expect(2);
+	var test = this;
+	var routes = [
+		{name: 'route1', url: this.fileName + 'incorrect'},
+		{name: 'route2', url: this.testPath}
+	];
+	Doppelganger.setRouteHandler('route1', function(){
+		ok('Things work');
+	});
+	var oldPushState = History.pushState;
+	History.pushState = function(stateObject, title, location){
+		equal(location, test.folder + test.testPath + '?foo=bar', 'Default route used correctly');
+		deepEqual(stateObject, {destination: 'route2', params: {foo:'bar'}});
+		History.pushState = oldPushState;
+	};
+	var app = Doppelganger.create({
+		defaultRoute: ['route2', {'foo': 'bar'}],
+		rootUrl: this.folder,
+		routes: routes
+	});
+	app.init();
+});
