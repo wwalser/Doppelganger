@@ -42,6 +42,7 @@ test('Basic filter setup', function() {
 		filters: filters
 	});
 	app.init();
+	app._destroy();
 });
 
 test('Basic route setup', function() {
@@ -60,6 +61,7 @@ test('Basic route setup', function() {
 		routes: routes
 	});
 	app.init();
+	app._destroy();
 });
 
 asyncTest('Basic event setup', function(){
@@ -90,6 +92,7 @@ asyncTest('Basic event setup', function(){
 	//Mozilla requires all parameters to initMouseEvent
     mouseEvent.initMouseEvent("click", true, true, window, 0, 0, 0, 80, 20, false, false, false, false, 0, null);
 	document.getElementById('qunit').dispatchEvent(mouseEvent);
+	app._destroy();
 });
 
 module('FilterManager');
@@ -226,6 +229,7 @@ test('Filters run in order they are registered', function(){
 		filters: filters
 	});
 	app.init();
+	app._destroy();
 });
 
 test('Filter can be added after app is created', function(){
@@ -250,6 +254,7 @@ test('Filter can be added after app is created', function(){
 	});
 	app1.filterManager.add(['first', 'second']);
 	app1.init();
+	app1._destroy();
 
 	//reset count
 	count = 0;
@@ -260,6 +265,7 @@ test('Filter can be added after app is created', function(){
 	});
 	app2.filterManager.add(['second']);
 	app2.init();
+	app2._destroy();
 });
 
 test('Filter can be removed prior to init', function(){
@@ -282,6 +288,7 @@ test('Filter can be removed prior to init', function(){
 	});
 	app.filterManager.remove('second');
 	app.init();
+	app._destroy();
 });
 
 test('Filter can be removed during filter chain', function(){
@@ -305,6 +312,7 @@ test('Filter can be removed during filter chain', function(){
 		filters: filters
 	});
 	app.init();
+	app._destroy();
 });
 
 test('Filter can remove itself.', function(){
@@ -334,6 +342,7 @@ test('Filter can remove itself.', function(){
 	});
 	app.init();
 	app.trigger('route1', {});
+	app._destroy();
 });
 
 module('router integration tests', {
@@ -361,18 +370,16 @@ test('startPage lookup works as expected', function(){
 		routes: routes
 	});
 	app.init();
+	app._destroy();
 });
 
-test('Default route redirect.', function(){
+test('Default route redirect', function(){
 	expect(2);
 	var test = this;
 	var routes = [
 		{name: 'route1', url: this.fileName + 'incorrect'},
 		{name: 'route2', url: this.testPath}
 	];
-	Doppelganger.setRouteHandler('route1', function(){
-		ok('Things work');
-	});
 	var oldPushState = History.pushState;
 	History.pushState = function(stateObject, title, location){
 		equal(location, test.folder + test.testPath + '?foo=bar', 'Default route used correctly');
@@ -385,4 +392,28 @@ test('Default route redirect.', function(){
 		routes: routes
 	});
 	app.init();
+	app._destroy();
+});
+
+test('Query params passed to route handler', function(){
+	if (window.navigator.userAgent.match(/PhantomJS/)) {
+		ok(true);
+		return;
+	}
+	expect(2);
+	var routes = [
+		{name: 'route1', url: this.fileName},
+		{name: 'route2', url: this.testPath}
+	];
+	Doppelganger.setRouteHandler('route1', function(routeData){
+		ok('Things work');
+		equal(routeData.params.test, true, 'Query params correctly populate routeData.params');
+	});
+	var app = Doppelganger.create({
+		rootUrl: this.folder,
+		routes: routes
+	});
+	History.pushState({}, document.title, this.folder + this.fileName + '?test=true');
+	app.init();
+	app._destroy();
 });
