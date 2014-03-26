@@ -57,5 +57,5 @@ Release History
 
 License
 -------
-Copyright (c) 2014 Wesley Walser
-Licensed under the MIT license.
+Copyright (c) 2014 Atlassian
+Licensed under the Apache 2.0.

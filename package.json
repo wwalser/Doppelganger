@@ -2,7 +2,7 @@
   "name": "Doppelganger",
   "description": "I saw this framework's doppelgänger the other day.",
   "version": "0.3.0",
-  "homepage": "https://bitbucket.org/wwalser/doppelg-nger",
+  "homepage": "https://bitbucket.org/atlassianlabs/doppelganger",
   "author": {
     "name": "Wesley Walser",
     "email": "waw325@gmail.com",
@@ -14,8 +14,8 @@
   },
   "licenses": [
     {
-      "type": "MIT",
-      "url": "https://github.com/wwalser/lazify/blob/master/LICENSE-MIT"
+      "type": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
     }
   ],
   "main": "lib/doppelganger.js",
