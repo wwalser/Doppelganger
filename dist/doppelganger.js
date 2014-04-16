@@ -1,3 +1,8 @@
+/***************
+ * Doppelganger
+ * Copyright Atlassian 2014
+ * Released under the Apache 2 license. http://www.apache.org/licenses/LICENSE-2.0.html
+ */
 (function(root){
 	'use strict';
 	//main Doppelganger constructor.

@@ -1,6 +1,11 @@
-'use strict';
+//'use strict';
 
 module.exports = function(grunt) {
+	var banner = "/***************\n" +
+		" * Doppelganger\n" +
+		" * Copyright Atlassian 2014\n" +
+		" * Released under the Apache 2 license. http://www.apache.org/licenses/LICENSE-2.0.html\n" +
+		" */\n";
 	function mainTasks(adapter) {
 		var adapterString = adapter ? ':' + adapter : '';
 		var tasks = [
@@ -41,7 +46,7 @@ module.exports = function(grunt) {
 		},
 		concat: {
 			options: {
-				banner: '<%= banner %>',
+				banner: banner,
 				stripBanners: true
 			},
 			dist: {
@@ -66,7 +71,7 @@ module.exports = function(grunt) {
 		},
 		uglify: {
 			options: {
-				banner: '<%= banner %>'
+				banner: banner
 			},
 			dist: {
 				src: '<%= concat.dist.dest %>',
