@@ -294,7 +294,6 @@ Doppelganger.prototype = {
 			//if the page that we are on is a valid route we can show that page
 			this.startPage = du.extend({}, this.startPage);
 			//ugly global variable from Arg.js that removes it's caches.
-			Arg._all = undefined;
 			this.startPage.params = du.extend(this.startPage.params, Arg.all());
 			this.trigger(this.startPage.destination, this.startPage.params);
 		} else {

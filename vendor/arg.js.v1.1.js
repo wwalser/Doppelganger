@@ -39,7 +39,7 @@
     var Arg = function(){
       return Arg.get.apply(global, arguments);
     };
-    Arg.version = "1.0.1";
+    Arg.version = "1.1.0";
 
     /**
      * Parses the arg string into an Arg.Arg object.
@@ -51,11 +51,24 @@
       var obj = {};
       var pairs = s.split("&");
       for (var pi in pairs) {
-        var kvsegs = pairs[pi].split("=");
-        var key = decodeURIComponent(kvsegs[0]), val = decodeURIComponent(kvsegs[1]);
-        Arg._access(obj, key, val);
+        if(pairs.hasOwnProperty(pi)){
+          var kvsegs = pairs[pi].split("=");
+          var key = decodeURIComponent(kvsegs[0]), val = Arg.__decode(kvsegs[1]);
+          Arg._access(obj, key, val);
+        }
       }
       return obj;
+    };
+
+    /**
+     * Decodes a URL component (including resolving + to spaces)
+     */
+    Arg.__decode = function(s) {
+      while (s && s.indexOf("+")>-1) {
+        s = s.replace("+", " ");
+      };
+      s = decodeURIComponent(s);
+      return s;
     };
 
     /**
@@ -87,7 +100,7 @@
           value = value && !isNaN(value)            ? +value              // number
                 : value === 'undefined'             ? undefined           // undefined
                 : coerce_types[value] !== undefined ? coerce_types[value] // true, false, null
-                : value;                                                  // string
+                : value;                                    // string
         }
         return shouldSet ? (obj[selector] = value) : obj[selector];
       }
@@ -216,8 +229,7 @@
      * Gets all parameters from the current URL.
      */
     Arg.all = function(){
-      var merged = Arg.parse(Arg.querystring() + "&" + Arg.hashstring());
-      return Arg._all ? Arg._all : Arg._all = merged;
+      return Arg.parse(Arg.querystring() + "&" + Arg.hashstring());
     };
 
     /**
@@ -232,14 +244,14 @@
      * Gets the query string parameters from the current URL.
      */
     Arg.query = function(){
-      return Arg._query ? Arg._query : Arg._query = Arg.parse(Arg.querystring());
+      return Arg.parse(Arg.querystring());
     };
 
     /**
      * Gets the hash string parameters from the current URL.
      */
     Arg.hash = function(){
-      return Arg._hash ? Arg._hash : Arg._hash = Arg.parse(Arg.hashstring());
+      return Arg.parse(Arg.hashstring());
     };
 
     /**
@@ -292,9 +304,15 @@
      */
     Arg.merge = function(){
       var all = {};
-      for (var ai in arguments)
-        for (var k in arguments[ai])
-          all[k] = arguments[ai][k];
+      for (var ai in arguments){
+        if(arguments.hasOwnProperty(ai)){
+          for (var k in arguments[ai]){
+            if(arguments[ai].hasOwnProperty(k)){
+              all[k] = arguments[ai][k];
+            }
+          }
+        }
+      }
       return all;
     };
 
