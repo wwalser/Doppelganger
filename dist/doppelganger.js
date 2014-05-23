@@ -290,6 +290,14 @@ Doppelganger.prototype = {
 				root.location = this.routeManager.generate(name, params);
 			}
 		};
+        this.navigateDefault = function(name, params){
+            //if pushstate, just use a full page reload.
+            if (history.replaceState) {
+                History.replaceState({destination: name, params: params}, document.title, this.routeManager.generate(name, params));
+            } else {
+                root.location = this.routeManager.generate(name, params);
+            }
+        };
 		if (this.startPage) {
 			//if the page that we are on is a valid route we can show that page
 			this.startPage = du.extend({}, this.startPage);
@@ -300,7 +308,7 @@ Doppelganger.prototype = {
 		} else {
 			//otherwise we've navigated somewhere that delivered the application but isn't
 			//a valid route, navigate to the defaultRoute.
-			this.navigate(this.options.defaultRoute[0], this.options.defaultRoute[1]);
+			this.navigateDefault(this.options.defaultRoute[0], this.options.defaultRoute[1]);
 		}
 	},
 
