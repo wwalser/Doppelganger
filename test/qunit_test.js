@@ -380,11 +380,11 @@ test('Default route redirect', function(){
 		{name: 'route1', url: this.fileName + 'incorrect'},
 		{name: 'route2', url: this.testPath}
 	];
-	var oldPushState = History.pushState;
-	History.pushState = function(stateObject, title, location){
+	var oldReplaceState = History.replaceState;
+	History.replaceState = function(stateObject, title, location){
 		equal(location, test.folder + test.testPath + '?foo=bar', 'Default route used correctly');
 		deepEqual(stateObject, {destination: 'route2', params: {foo:'bar'}});
-		History.pushState = oldPushState;
+		History.replaceState = oldReplaceState;
 	};
 	var app = Doppelganger.create({
 		defaultRoute: ['route2', {'foo': 'bar'}],

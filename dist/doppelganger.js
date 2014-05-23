@@ -260,12 +260,11 @@ Doppelganger.prototype = {
 		//do fancy things.
 		this.active = true;
 		History.Adapter.bind(window,'statechange', function(){
-			if (self.active) {
-				var state = History.getState();
-				//Fire filter chain.
-				if (state.data.destination && !state.data.controllerStateChange) {
-					//if controllerStateChange is true a controller has triggered this state change.
-					//Otherwise use filter chain.
+			var state = History.getState();
+			if (self.active && !state.data.controllerStateChange) {
+				//if controllerStateChange is true a controller has triggered this state change.
+				//Otherwise use filter chain.
+				if (state.data.destination) {
 					self.trigger(state.data.destination, state.data.params);
 				} else if (!state.data.destination) {
 					self.trigger(self.startPage.destination, self.startPage.params);
@@ -290,6 +289,7 @@ Doppelganger.prototype = {
 				root.location = this.routeManager.generate(name, params);
 			}
 		};
+
 		if (this.startPage) {
 			//if the page that we are on is a valid route we can show that page
 			this.startPage = du.extend({}, this.startPage);
@@ -300,9 +300,20 @@ Doppelganger.prototype = {
 		} else {
 			//otherwise we've navigated somewhere that delivered the application but isn't
 			//a valid route, navigate to the defaultRoute.
-			this.navigate(this.options.defaultRoute[0], this.options.defaultRoute[1]);
+			this.navigateDefault();
 		}
 	},
+
+    navigateDefault: function(){
+        var name = this.options.defaultRoute[0];
+        var params = this.options.defaultRoute[1];
+        //if pushstate, just use a full page reload.
+        if (history.replaceState) {
+            History.replaceState({destination: name, params: params}, document.title, this.routeManager.generate(name, params));
+        } else {
+            root.location = this.routeManager.generate(name, params);
+        }
+    },
 
 	/**
 	 * Ideally this is relatively unused. The navigate method could just handle whether something is a refresh or a
