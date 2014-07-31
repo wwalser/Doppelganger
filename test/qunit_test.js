@@ -95,6 +95,18 @@ asyncTest('Basic event setup', function(){
 	app._destroy();
 });
 
+module('Options');
+
+test('urlCoerceMode', function(){
+	expect(1);
+	Doppelganger.create({
+		rootUrl: '',
+		routes: [],
+		urlCoerceMode: false
+	});
+	equal(window.Arg.coerceMode, false, 'Arg.coerceMode should be set to false by Doppelganger.');
+});
+
 module('FilterManager');
 
 test('Add an array of filters.', function(){
