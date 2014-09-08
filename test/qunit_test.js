@@ -156,6 +156,7 @@ module('RouteManager', {
 		this.fileName = this.pathname.substr(this.pathname.lastIndexOf("/"));
 		this.folder = pathWithoutFilename;
 		this.testPath = '/foobar';
+		this.queryString = '?test=true';
 	}
 });
 
@@ -186,7 +187,7 @@ test('Add can be called multiple times', function(){
 	}
 });
 
-test('recognize', function(){
+test('recognize without query params', function(){
 	expect(1);
 	var routes = [
 		{name: 'route1', url: this.fileName},
@@ -195,6 +196,20 @@ test('recognize', function(){
 	var routeManager = new Doppelganger.RouteManager({}, this.folder);
 	routeManager.add(routes);
 	equal(routeManager.recognize(this.folder + this.testPath)['destination'], 'route2', 'Route was recognized.');
+});
+
+test('recognize without query params', function(){
+	expect(2);
+	var routeObject;
+	var routes = [
+		{name: 'route1', url: this.fileName},
+		{name: 'route2', url: this.testPath}
+	];
+	var routeManager = new Doppelganger.RouteManager({}, this.folder);
+	routeManager.add(routes);
+	routeObject = routeManager.recognize(this.folder + this.testPath + this.queryString);
+	equal(routeObject['destination'], 'route2', 'Route was recognized.');
+	equal(routeObject['params']['test'], true, 'Query params were turned into routeObject params.');
 });
 
 test('generate', function(){

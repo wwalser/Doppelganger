@@ -1082,7 +1082,7 @@ Doppelganger.prototype = {
 				}
 			}
 		});
-		this.startPage = this.routeManager.recognize(window.location.pathname);
+		this.startPage = this.routeManager.recognize(window.location.pathname + window.location.search);
 		this.navigate();
 	},
 
@@ -1103,9 +1103,6 @@ Doppelganger.prototype = {
 
 		if (this.startPage) {
 			//if the page that we are on is a valid route we can show that page
-			this.startPage = du.extend({}, this.startPage);
-			//ugly global variable from Arg.js that removes it's caches.
-			this.startPage.params = du.extend(this.startPage.params, Arg.all());
 			this.trigger(this.startPage.destination, this.startPage.params);
 		} else {
 			//otherwise we've navigated somewhere that delivered the application but isn't
@@ -1186,7 +1183,20 @@ Doppelganger.RouteManager.prototype = {
 		this.routes = this.routes.concat(routeArray);
 	},
 	recognize: function (fullUrl) {
-		return this.router.recognize(fullUrl);
+		var queryIndex = fullUrl.indexOf('?'),
+		urlWithoutQuery = fullUrl,
+		queryParams, routeObject;
+		if (queryIndex !== -1) {
+			urlWithoutQuery = fullUrl.substring(0, queryIndex);
+			queryParams = Arg.parse(fullUrl);
+		}
+		routeObject = this.router.recognize(urlWithoutQuery);
+		//If the route was found, clean it up and add query params to the params list.
+		if (routeObject) {
+			routeObject = du.extend({}, routeObject);
+			routeObject.params = du.extend(routeObject.params, queryParams);
+		}
+		return routeObject;
 	},
 	generate: function (name, params) {
 		//because Sherpa mutates params we hand it a copy instead.
