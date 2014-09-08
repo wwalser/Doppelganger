@@ -95,7 +95,16 @@ asyncTest('Basic event setup', function(){
 	app._destroy();
 });
 
-module('Options');
+(function(){
+function setResetCoerceMode() {
+	window.Arg.coerceMode = true;
+}
+module('Options', {
+	//set and reset coerceMode so that it doesn't affect other tests
+	setup: setResetCoerceMode,
+	teardown: setResetCoerceMode
+});
+})();
 
 test('urlCoerceMode', function(){
 	expect(1);
@@ -365,6 +374,11 @@ module('router integration tests', {
 		this.fileName = this.pathname.substr(this.pathname.lastIndexOf("/"));
 		this.folder = pathWithoutFilename;
 		this.testPath = '/foobar';
+
+		this.resetUrl = window.location.toString();
+	},
+	teardown: function(){
+		History.pushState({}, document.title, this.resetUrl);
 	}
 });
 
