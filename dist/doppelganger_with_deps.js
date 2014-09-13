@@ -1227,9 +1227,15 @@ Doppelganger.FilterManager.prototype = {
         }
     },
     process: function(routeData){
+		var filterName;
+		var newRouteData;
         for (filterIterator = 0; filterIterator < this.filters.length; filterIterator++) {
-			var filterName = this.filters[filterIterator];
-			routeData = Doppelganger.getFilterHandler(filterName).call(this.app, routeData);
+			filterName = this.filters[filterIterator];
+			newRouteData = Doppelganger.getFilterHandler(filterName).call(this.app, routeData);
+			//Protect the filter chain data from filters which forget to return routeData object.
+			if (newRouteData) {
+				routeData = newRouteData;
+			}
         }
     }
 };

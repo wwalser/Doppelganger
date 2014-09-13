@@ -139,13 +139,25 @@ test('Multiple calls to add.', function(){
 	deepEqual(filterManager.filters, filterSet1.concat(filterSet2), 'Multiple filter sets can be added');
 });
 
-test('Multiple calls to add.', function(){
+test('Filters can be removed.', function(){
 	expect(1);
 	var filterSet1 = ['test', 'foo', 'bar'];
 	var filterManager = new Doppelganger.FilterManager({});
 	filterManager.add(filterSet1);
 	filterManager.remove('foo');
-	deepEqual(filterManager.filters, ['test', 'bar'], 'Multiple filter sets can be added');
+	deepEqual(filterManager.filters, ['test', 'bar'], 'Remove call should remove filter from the filterManager.');
+});
+
+test("Filters which don't return routeData object.", function(){
+	var filterSet = ['testNoRouteDataReturn', 'testsRouteDataIsPresent'];
+	var filterManager = new Doppelganger.FilterManager({});
+	var testRouteData = {testing: 'success'};
+	Doppelganger.setFilterHandler('testNoRouteDataReturn', function(){});
+	Doppelganger.setFilterHandler('testsRouteDataIsPresent', function(routeData){
+		equal(routeData, testRouteData, 'Route data should survive bad filters.');
+	});
+	filterManager.add(filterSet);
+	filterManager.process(testRouteData);
 });
 
 module('RouteManager', {
