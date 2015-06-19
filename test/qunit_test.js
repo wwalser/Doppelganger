@@ -160,6 +160,69 @@ test("Filters which don't return routeData object.", function(){
 	filterManager.process(testRouteData);
 });
 
+asyncTest("Filters chain waits on async filter.", 1, function(){
+    var filterSet = ['testThenableFilter', 'testWasNotCalledImmediately'];
+    var filterManager = new Doppelganger.FilterManager({});
+    var testRouteData = {testing: 'success'};
+    var changesEventuallyFlag = false;
+    Doppelganger.setFilterHandler('testThenableFilter', function(routeData){
+        return {
+            then: function(funcToEnqueue){
+                setTimeout(function(){
+                    funcToEnqueue(routeData);
+                }, 10);
+                changesEventuallyFlag = true;
+            }
+        };
+    });
+    Doppelganger.setFilterHandler('testWasNotCalledImmediately', function(){
+        start();
+        ok(changesEventuallyFlag, 'The filter should be called asynchronously instead of immediately.');
+    });
+    filterManager.add(filterSet);
+    filterManager.process(testRouteData);
+});
+
+test("RouteData survives bad async filter.", 1, function(){
+    var filterSet = ['testThenableFilterWithNoRouteDataPassed', 'testsRouteDataIsPresent'];
+    var filterManager = new Doppelganger.FilterManager({});
+    var testRouteData = {testing: 'success'};
+    Doppelganger.setFilterHandler('testThenableFilterWithNoRouteDataPassed', function(){
+        return {
+            then: function(funcToEnqueue){
+                //no route data passed to enqueued filter.
+                funcToEnqueue();
+            }
+        };
+    });
+    Doppelganger.setFilterHandler('testsRouteDataIsPresent', function(routeData){
+        equal(routeData, testRouteData, 'Route data should survive bad filters.');
+    });
+    filterManager.add(filterSet);
+    filterManager.process(testRouteData);
+});
+
+test("Correct RouteData is used after async filter.", 1, function(){
+    var filterSet = ['testThenableFilterWithNoRouteDataPassed', 'testsRouteDataIsPresent'];
+    var filterManager = new Doppelganger.FilterManager({});
+    var testRouteData = {testing: 'success'};
+    var newRouteData = {awesome: 'true'};
+    Doppelganger.setFilterHandler('testThenableFilterWithNoRouteDataPassed', function(){
+        return {
+            then: function(funcToEnqueue){
+                //ignores the routeData passed to it, returns awesome route data instead
+                funcToEnqueue(newRouteData);
+            }
+        };
+    });
+    Doppelganger.setFilterHandler('testsRouteDataIsPresent', function(routeData){
+        //ensure next filter recieves awesome route data.
+        equal(routeData, newRouteData, 'Route data should survive bad filters.');
+    });
+    filterManager.add(filterSet);
+    filterManager.process(testRouteData);
+});
+
 module('RouteManager', {
 	setup: function(){
 		var pathWithoutFilename;
