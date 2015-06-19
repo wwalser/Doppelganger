@@ -1,4 +1,4 @@
-Doppelgänger
+Doppelgänger [![Build Status](https://travis-ci.org/wwalser/Doppelganger.svg?branch=master)](https://travis-ci.org/wwalser/Doppelganger)
 ============
 Doppelgänger is a small structural framework built with composability in mind. 
 
